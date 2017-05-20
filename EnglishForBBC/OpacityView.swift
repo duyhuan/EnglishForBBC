@@ -9,13 +9,24 @@
 import UIKit
 
 class OpacityView: UIView {
-
-    /*
-    // Only override draw() if you perform custom drawing.
-    // An empty implementation adversely affects performance during animation.
-    override func draw(_ rect: CGRect) {
-        // Drawing code
+    
+    override func awakeFromNib() {
+        self.alpha = 0
     }
-    */
+
+    class func instanceFromNib() -> OpacityView {
+        return UINib(nibName: "OpacityView", bundle: nil).instantiate(withOwner: nil, options: nil).first as! OpacityView
+    }
+    
+    func showInView(view: UIView) -> Void {
+        //
+        view.addSubview(self)
+        self.frame = view.frame
+//        self.frame = self.frame
+        // update fram
+//        var frame = self.frame
+//        frame.origin.x = view.frame.size.width
+//        self.frame = frame
+    }
 
 }

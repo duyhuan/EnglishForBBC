@@ -9,17 +9,31 @@
 import UIKit
 import AVFoundation
 
+let arrNameCache = NSCache<AnyObject, AnyObject>()
+let arrAudio_linkCache = NSCache<AnyObject, AnyObject>()
+let arrImage_linkCache = NSCache<AnyObject, AnyObject>()
+let arrDescCache = NSCache<AnyObject, AnyObject>()
+let arrLyricsCache = NSCache<AnyObject, AnyObject>()
+let arrVocCache = NSCache<AnyObject, AnyObject>()
+let vocAndMeanCache = NSCache<AnyObject, AnyObject>()
+let imageCache = NSCache<AnyObject, AnyObject>()
+let nameCache = NSCache<AnyObject, AnyObject>()
+let descCache = NSCache<AnyObject, AnyObject>()
+
 class ViewController: UIViewController {
     
     @IBOutlet weak var yearCollectionView: UICollectionView!
     @IBOutlet weak var homeTableView: UITableView!
+    @IBOutlet weak var homeTableViewSpaceBottomConstraint: NSLayoutConstraint!
     
     var player = AVPlayer()
     var isPlay: Bool = false
     var isRepeat: Bool = false
     var isExchange: Bool = true
     var isLike: Bool = false
-    var audio_linkString = "http://46.101.217.198/downloads.bbc.co.uk/learningenglish/intermediate/unit15/b2_u15_6min_vocab_discourse_markers_download.mp3"
+    var audio_linkString = ""// "http://46.101.217.198/downloads.bbc.co.uk/learningenglish/intermediate/unit15/b2_u15_6min_vocab_discourse_markers_download.mp3"
+    var str = ""
+    
     var id: Int = 0
     var year: Int = 2017
     var firstYearCollectionView: Bool = true
@@ -41,21 +55,30 @@ class ViewController: UIViewController {
     var arrLyrics: [String] = [String]()
     var arrVoc: [String] = [String]()
     var vocAndMean: [[String]] = [[String]]()
+    var dictHomeLikeButton: [Int: Int] = [Int: Int]()
+    
+    var dictNameFavorite: [Int: String] = [Int: String]()
+    var dictImage_linkFavorite: [Int: String] = [Int: String]()
+    var dictDescFavorite: [Int: String] = [Int: String]()
     
     var playerMini: PlayerMini?
-    
-    var playingIndexPath: IndexPath = IndexPath()
-    var indexPathSelected: IndexPath = IndexPath()
-    
     let topicModel = TopicModel()
     let managerAPI = ManagerAPI()
-    
     var menu: Menu?
     var menuModel: [[MenuModel]] = [[MenuModel]]()
+    var settingView: SettingView?
+    var opacityView: OpacityView?
+    
+    var playingIndexPath: IndexPath = IndexPath()
+    var indexPathSelected: IndexPath = IndexPath(row: 0, section: 0)
+    
     var arrayTitleOfSection: [String] = [String]()
     var arrYear: [Int] = [2017, 2016, 2015, 2014, 2013, 2012, 2011, 2010, 2009, 2008]
     
     let heightSectionHeaderMenu: CGFloat = 15.0
+    
+    var activityIndicator: UIActivityIndicatorView = UIActivityIndicatorView()
+    var refresher: UIRefreshControl?
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return UIStatusBarStyle.lightContent
@@ -64,13 +87,18 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        str = "{\"jsonrpc\":\"2.0\",\"method\":\"bbc_english.category.getSongFull\",\"id\":\"gtl_3\",\"params\":{\"id\": \(id),\"year\":\(year)},\"apiVersion\": \"v1\"}"
+        
+        setupRefresher()
+        
         getDataMenuModel()
         
+        opacityView = OpacityView.instanceFromNib()
         menu = Menu.instanceFromNibMenu()
-        
         playerMini = PlayerMini.instanceFromNib()
+        settingView = SettingView.instanceFromNib()
         
-        playerMini?.timeSlider.isEnabled = false
+//        playerMini?.timeSlider.isEnabled = false
         
         playerMini?.timeSlider.setThumbImage(UIImage(named: "PlayerMain-icon-lineplaying.png"), for: UIControlState.normal)
         playerMini?.timeSlider.setThumbImage(UIImage(named: "PlayerMain-icon-lineplaying.png"), for: UIControlState.highlighted)
@@ -97,6 +125,9 @@ class ViewController: UIViewController {
         
         playerMini?.preMainPlayButton.addTarget(self, action: #selector(handlePreMainPlayButton), for: .touchUpInside)
         
+        menu?.rightView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(hideMenu)))
+        menu?.rightView.isUserInteractionEnabled = true
+        
         menu?.menuTableView.dataSource = self
         menu?.menuTableView.delegate = self
         playerMini?.vocTableView.dataSource = self
@@ -111,41 +142,94 @@ class ViewController: UIViewController {
         
     }
     
+    func hideMenu() {
+        UIView.animate(withDuration: 0.3) {
+            self.menu?.frame.origin.x = 0 - (self.menu?.frame.width)!
+            self.opacityView?.alpha = 0
+        }
+    }
+    
+    func setupRefresher() {
+        refresher = UIRefreshControl()
+        refresher?.addTarget(self, action: #selector(handleRefresherTableView), for: .valueChanged)
+        refresher?.tintColor = UIColor.red
+        homeTableView.addSubview(refresher!)
+    }
+    
+    func handleRefresherTableView() {
+        if year != 0 || id != -1 {
+            getData()
+        }
+        homeTableView.reloadData()
+        refresher?.endRefreshing()
+    }
+    
+    func setupActivityIndicator() {
+        activityIndicator.center = self.view.center
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.color = UIColor.red
+        activityIndicator.transform = CGAffineTransform(scaleX: 2.0, y: 2.0)
+        self.view.addSubview(activityIndicator)
+        startAnimating()
+    }
+    
+    func startAnimating() {
+        activityIndicator.startAnimating()
+    }
+    
+    func stopAnimating() {
+        activityIndicator.stopAnimating()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        setupActivityIndicator()
+        getData()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.playerMini?.showInView(view: self.view)
+        self.opacityView?.showInView(view: self.view)
+        self.menu?.showInView(view: self.view)
+        self.settingView?.showInView(view: self.view)
+    }
+    
     func getDataMenuModel() {
         menuModel = [
             [
-                MenuModel(menuIconImage: "Menu-icon-conversation.png", menuLabel: "English Conversation"),
-                MenuModel(menuIconImage: "Menu-icon-new-report.png", menuLabel: "New Report"),
-                MenuModel(menuIconImage: "Menu-icon-express.png", menuLabel: "Express English")
+                MenuModel(menuIconImage: "Menu-icon-conversation.png",  menuLabel: TopicName.EnglishConversation.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-new-report.png",    menuLabel: TopicName.NewReport.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-express.png",       menuLabel: TopicName.ExpressEnglish.rawValue)
             ],
             [
-                MenuModel(menuIconImage: "Menu-icon-we-speak.png", menuLabel: "The English We Speak"),
-                MenuModel(menuIconImage: "Menu-icon-words.png", menuLabel: "Words In The News"),
-                MenuModel(menuIconImage: "Menu-icon-lingo.png", menuLabel: "LingoHack"),
-                MenuModel(menuIconImage: "Menu-icon-University.png", menuLabel: "English At University"),
-                MenuModel(menuIconImage: "Menu-icon-work.png", menuLabel: "English At Work")
+                MenuModel(menuIconImage: "Menu-icon-we-speak.png",      menuLabel: TopicName.TheEnglishWeSpeak.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-words.png",         menuLabel: TopicName.WordsInTheNews.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-lingo.png",         menuLabel: TopicName.LingoHack.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-University.png",    menuLabel: TopicName.EnglishAtUniversity.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-work.png",          menuLabel: TopicName.EnglishAtWork.rawValue)
             ],
             [
-                MenuModel(menuIconImage: "Menu-icon-6English.png", menuLabel: "6 Minute English"),
-                MenuModel(menuIconImage: "Menu-icon-6Grammar.png", menuLabel: "6 Minute Grammar"),
-                MenuModel(menuIconImage: "Menu-icon-6Vocabulary.png", menuLabel: "6 Minute Vocabulary"),
-                MenuModel(menuIconImage: "Menu-icon-Review.png", menuLabel: "New Review"),
-                MenuModel(menuIconImage: "Menu-icon-Drama.png", menuLabel: "Drama"),
+                MenuModel(menuIconImage: "Menu-icon-6English.png",      menuLabel: TopicName.SixMinuteEnglish.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-6Grammar.png",      menuLabel: TopicName.SixMinuteGrammar.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-6Vocabulary.png",   menuLabel: TopicName.SixMinuteVocabulary.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-Review.png",        menuLabel: TopicName.NewReview.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-Drama.png",         menuLabel: TopicName.Drama.rawValue),
                 ],
             [
-                MenuModel(menuIconImage: "Menu-icon-Flashcard.png", menuLabel: "Vocabulary FlashCards"),
-                MenuModel(menuIconImage: "Menu-icon-VocaQuiz.png", menuLabel: "Vocabulary Quiz"),
-                MenuModel(menuIconImage: "Menu-icon-pronuncation.png", menuLabel: "Pronunciation")
+                MenuModel(menuIconImage: "Menu-icon-Flashcard.png",     menuLabel: TopicName.VocabularyFlashCards.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-VocaQuiz.png",      menuLabel: TopicName.VocabularyQuiz.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-pronuncation.png",  menuLabel: TopicName.Pronunciation.rawValue)
             ],
             [
-                MenuModel(menuIconImage: "Menu-icon-MyPlaylist.png", menuLabel: "My Playlist"),
-                MenuModel(menuIconImage: "Menu-icon-downloaded.png", menuLabel: "Downloaded")
+                MenuModel(menuIconImage: "Menu-icon-MyPlaylist.png",    menuLabel: TopicName.MyPlaylist.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-downloaded.png",    menuLabel: TopicName.Downloaded.rawValue)
             ],
             [
-                MenuModel(menuIconImage: "Menu-icon-Upgrade.png", menuLabel: "Upgrade Pro Version"),
-                MenuModel(menuIconImage: "Menu-icon-Feedback.png", menuLabel: "Feedback for Us"),
-                MenuModel(menuIconImage: "Menu-icon-Setting.png", menuLabel: "Setting"),
-                MenuModel(menuIconImage: "Menu-icon-rate.png", menuLabel: "Rate me 5-stars")
+                MenuModel(menuIconImage: "Menu-icon-Upgrade.png",       menuLabel: TopicName.UpgradeProVersion.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-Feedback.png",      menuLabel: TopicName.FeedbackForUs.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-Setting.png",       menuLabel: TopicName.Setting.rawValue),
+                MenuModel(menuIconImage: "Menu-icon-rate.png",          menuLabel: TopicName.RateMe.rawValue)
             ]
         ]
         
@@ -240,17 +324,6 @@ class ViewController: UIViewController {
         self.tableView((playerMini?.playListSongTableView)!, didSelectRowAt: newPlayingIndexPath)
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        self.playerMini?.showInView(view: self.view)
-        self.menu?.showInView(view: self.view)
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        getData()
-    }
-    
     func getData() {
         arrName.removeAll()
         arrAudio_link.removeAll()
@@ -260,9 +333,44 @@ class ViewController: UIViewController {
         arrVoc.removeAll()
         vocAndMean.removeAll()
         
-        let str = "{\"jsonrpc\":\"2.0\",\"method\":\"bbc_english.category.getSongFull\",\"id\":\"gtl_3\",\"params\":{\"id\": \(id),\"year\":\(year)},\"apiVersion\": \"v1\"}"
+        str = "{\"jsonrpc\":\"2.0\",\"method\":\"bbc_english.category.getSongFull\",\"id\":\"gtl_3\",\"params\":{\"id\": \(id),\"year\":\(year)},\"apiVersion\": \"v1\"}"
         
-        // create post request
+        if let arrNameObject = arrNameCache.object(forKey: str as AnyObject), let arrImage_linkObject = arrImage_linkCache.object(forKey: str as AnyObject), let arrDescObject = arrDescCache.object(forKey: str as AnyObject) {
+            //            , let arrAudio_linkObject = arrAudio_linkCache.object(forKey: str as AnyObject), let arrLyricsObject = arrLyricsCache.object(forKey: str as AnyObject), let arrVocObject = arrVocCache.object(forKey: str as AnyObject) {
+            
+            stopAnimating()
+            if let arrNameObject = arrNameObject as? [String] {
+                arrName = arrNameObject
+            }
+            if let arrImage_linkObject = arrImage_linkObject as? [String] {
+                arrImage_link = arrImage_linkObject
+            }
+            if let arrDescObject = arrDescObject as? [String] {
+                arrDesc = arrDescObject
+            }
+            
+        } else {
+            handleDataFromAPIOnMenu(str: str)
+        }
+        
+        if let arrAudio_linkObject = arrAudio_linkCache.object(forKey: str as AnyObject), let arrLyricsObject = arrLyricsCache.object(forKey: str as AnyObject), let arrVocObject = arrVocCache.object(forKey: str as AnyObject) {
+            if let arrAudio_linkObject = arrAudio_linkObject as? [String] {
+                arrAudio_link = arrAudio_linkObject
+            }
+            if let arrLyricsObject = arrLyricsObject as? [String] {
+                arrLyrics = arrLyricsObject
+            }
+            if let arrVocObject = arrVocObject as? [String] {
+                arrVoc = arrVocObject
+            }
+            
+        } else {
+            handleDataFromAPIOnPlayer()
+        }
+        
+    }
+    
+    func handleDataFromAPIOnMenu(str: String) {
         guard let url = URL(string: baseAPI) else {return}
         
         var request = URLRequest(url: url)
@@ -288,34 +396,26 @@ class ViewController: UIViewController {
                 if let result = responseJSON["result"] {
                     if let resultCategory = result as? [String: Any] {
                         if let resultData = resultCategory["data"] {
-                            
                             if let result = resultData as? [[String: Any]] {
-                                
                                 for index in result {
-                                    
                                     self.topicModel.name = index["name"] as! String
-                                    self.topicModel.audio_link = index["audio_link"] as! String
                                     self.topicModel.image_link = index["image_link"] as! String
                                     self.topicModel.desc = index["desc"] as! String
-                                    if let index = index["html_link"] as? String, !index.isEmpty {
-                                        self.topicModel.html_link = index
-                                    }
-                                    if let index = index["voc"] as? String {
-                                        self.topicModel.voc = index
-                                    }
                                     
                                     self.arrName.append(self.topicModel.name)
-                                    self.arrAudio_link.append(self.topicModel.audio_link)
                                     self.arrImage_link.append(self.topicModel.image_link)
                                     self.arrDesc.append(self.topicModel.desc)
-                                    self.arrLyrics.append(self.topicModel.html_link)
-                                    self.arrVoc.append(self.topicModel.voc)
                                 }
+                                
+                                arrNameCache.setObject(self.arrName as AnyObject, forKey: str as AnyObject)
+                                arrImage_linkCache.setObject(self.arrImage_link as AnyObject, forKey: str as AnyObject)
+                                arrDescCache.setObject(self.arrDesc as AnyObject, forKey: str as AnyObject)
                                 
                                 DispatchQueue.main.async {
                                     self.homeTableView.reloadData()
                                     self.playerMini?.vocTableView.reloadData()
                                     self.playerMini?.playListSongTableView.reloadData()
+                                    self.stopAnimating()
                                 }
                                 
                             }
@@ -330,11 +430,67 @@ class ViewController: UIViewController {
         }
         
         task.resume()
+    }
+    
+    func handleDataFromAPIOnPlayer() {
+        guard let url = URL(string: baseAPI) else {return}
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        // content-type
+        let headers: Dictionary = ["Content-Type": "application/json"]
+        request.allHTTPHeaderFields = headers
+        // insert json data to the request
+        let data_body = str.data(using: .utf8)
+        request.httpBody = data_body
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            guard let data = data, error == nil else {
+                print(error?.localizedDescription ?? "No data")
+                return
+            }
+            let responseJSON = try? JSONSerialization.jsonObject(with: data, options: [])
+            if let responseJSON = responseJSON as? [String: Any] {
+                if let result = responseJSON["result"] {
+                    if let resultCategory = result as? [String: Any] {
+                        if let resultData = resultCategory["data"] {
+                            if let result = resultData as? [[String: Any]] {
+                                for index in result {
+                                    self.topicModel.audio_link = index["audio_link"] as! String
+                                    
+                                    if let index = index["html_link"] as? String, !index.isEmpty {
+                                        self.topicModel.html_link = index
+                                    }
+                                    if let index = index["voc"] as? String {
+                                        self.topicModel.voc = index
+                                    }
+                                    
+                                    self.arrAudio_link.append(self.topicModel.audio_link)
+                                    self.arrLyrics.append(self.topicModel.html_link)
+                                    self.arrVoc.append(self.topicModel.voc)
+                                }
+                                
+                                arrAudio_linkCache.setObject(self.arrAudio_link as AnyObject, forKey: self.str as AnyObject)
+                                arrLyricsCache.setObject(self.arrLyrics as AnyObject, forKey: self.str as AnyObject)
+                                arrVocCache.setObject(self.arrVoc as AnyObject, forKey: self.str as AnyObject)
+                                
+                                DispatchQueue.main.async {
+                                    self.homeTableView.reloadData()
+                                    self.playerMini?.vocTableView.reloadData()
+                                    self.playerMini?.playListSongTableView.reloadData()
+                                    self.stopAnimating()
+                                }
+                                
+                            }
+                            
+                        }
+                    }
+                    
+                }
+            }
+            
+            
+        }
         
-        //        if let url = URL(string: arrAudio_link[numberMp3]) {
-        //            player = AVPlayer(url: url)
-        //        }
-        
+        task.resume()
     }
     
     func playLocal() {
@@ -355,7 +511,7 @@ class ViewController: UIViewController {
     }
     
     func handlePlayButton() {
-        playerMini?.timeSlider.isEnabled = true
+//        playerMini?.timeSlider.isEnabled = true
         
         if isPlay {
             timerUpdateCurrentTime.invalidate()
@@ -397,6 +553,7 @@ class ViewController: UIViewController {
                 self.player.play()
             }
         } else {
+            self.playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-pause.png"), for: .normal)
             self.playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Pause.png"), for: .normal)
             player.seek(to: kCMTimeZero)
             player.pause()
@@ -460,17 +617,35 @@ class ViewController: UIViewController {
     }
     
     func handlePressHomeLikeButton(sender: UIButton) {
-        if !isLike {
-            sender.setBackgroundImage(UIImage(named: "Home-button-like-on.png"), for: .normal)
-            isLike = true
-        } else {
-            sender.setBackgroundImage(UIImage(named: "Home-button-like-off.png"), for: .normal)
-            isLike = false
+        let tag = sender.tag
+        
+        
+        
+        let imgOn = UIImage(named: "Home-button-like-on.png")
+        let imgOff = UIImage(named: "Home-button-like-off.png")
+        if sender.currentBackgroundImage == imgOn {
+            dictNameFavorite.removeValue(forKey: tag)
+            dictImage_linkFavorite.removeValue(forKey: tag)
+            dictDescFavorite.removeValue(forKey: tag)
+            
+            dictHomeLikeButton.removeValue(forKey: sender.tag)
+            sender.setBackgroundImage(imgOff, for: .normal)
+        } else if sender.currentBackgroundImage == imgOff {
+            dictNameFavorite[tag] = arrName[tag]
+            dictImage_linkFavorite[tag] = arrImage_link[tag]
+            dictDescFavorite[tag] = arrDesc[tag]
+            
+            dictHomeLikeButton[sender.tag] = sender.tag
+            sender.setBackgroundImage(imgOn, for: .normal)
         }
+        
     }
     
     @IBAction func handleShowMenuButton(_ sender: UIButton) {
         self.menu?.openMenu()
+        UIView.animate(withDuration: 0.3) {
+            self.opacityView?.alpha = 0.6
+        }
     }
     
     override func didReceiveMemoryWarning() {
@@ -532,33 +707,64 @@ extension ViewController: UITableViewDataSource {
         if tableView == playerMini?.playListSongTableView {
             let cell = Bundle.main.loadNibNamed("PlayListSongTableViewCell", owner: self, options: nil)?.first as! PlayListSongTableViewCell
             
-            cell.iconMusicImageView.image = UIImage(named: "PlayerMain-icon-Music.png")
-            let itemArrName = arrName[indexPath.row]
-            cell.nameSongLabel.text = itemArrName
+            DispatchQueue.global().async {
+                let itemArrName = self.arrName[indexPath.row]
+                DispatchQueue.main.async {
+                    cell.iconMusicImageView.image = UIImage(named: "PlayerMain-icon-Music.png")
+                    cell.nameSongLabel.text = itemArrName
+                }
+            }
             
             return cell
         } else if tableView == homeTableView {
             let cell = tableView.dequeueReusableCell(withIdentifier: "homeTableViewCell", for: indexPath) as! TopicTableViewCell
-            cell.homeLikeButton.tag = indexPath.row + 100
-            cell.homeLikeButton.addTarget(self, action: #selector(handlePressHomeLikeButton), for: .touchUpInside)
-            let itemArrImage_link = arrImage_link[indexPath.row]
-            let urlImage = URL(string: itemArrImage_link)
+            cell.homeImage.image = nil
+            cell.homeNameSongLabel.text = nil
+            cell.homeDescSongLabel.text = nil
+            cell.homeLikeButton.setBackgroundImage(UIImage(named: "Home-button-like-off.png"), for: .normal)
+            
+            let urlString = self.arrImage_link[indexPath.row]
+            let itemArrName = self.arrName[indexPath.row]
+            let itemArrDesc = self.arrDesc[indexPath.row]
+            
             DispatchQueue.global().async {
-                do {
-                    let data = try Data(contentsOf: urlImage!)
-                    DispatchQueue.main.async {
-                        cell.homeImage.image = UIImage(data: data)
+                cell.homeLikeButton.tag = indexPath.row
+                cell.homeLikeButton.addTarget(self, action: #selector(self.handlePressHomeLikeButton), for: .touchUpInside)
+                for (key, _) in self.dictHomeLikeButton {
+                    if cell.homeLikeButton.tag == key {
+                        DispatchQueue.main.async {
+                            cell.homeLikeButton.setBackgroundImage(UIImage(named: "Home-button-like-on.png"), for: .normal)
+                        }
                     }
-                } catch {
-                    print(error)
+                }
+                
+                let url = URL(string: urlString)
+                if let imgCache = imageCache.object(forKey: urlString as AnyObject), let nameCache = nameCache.object(forKey: itemArrName as AnyObject), let descCache = descCache.object(forKey: itemArrDesc as AnyObject) {
+                    DispatchQueue.main.async {
+                        cell.homeImage.image = imgCache as? UIImage
+                        cell.homeNameSongLabel.text = nameCache as? String
+                        cell.homeDescSongLabel.text = descCache as? String
+                    }
+                } else {
+                    do {
+                        let data = try Data(contentsOf: url!)
+                        DispatchQueue.main.async {
+                            cell.homeImage.image = UIImage(data: data)
+                            if let img = UIImage(data: data) {
+                                imageCache.setObject(img, forKey: urlString as AnyObject)
+                            }
+                            cell.homeNameSongLabel.text = itemArrName
+                            nameCache.setObject(itemArrName as AnyObject, forKey: itemArrName as AnyObject)
+                            cell.homeDescSongLabel.text = itemArrDesc
+                            descCache.setObject(itemArrDesc as AnyObject, forKey: itemArrDesc as AnyObject)
+                        }
+                    } catch {
+                        print(error)
+                    }
+                    
+                    
                 }
             }
-            
-            cell.homeImage.image = UIImage(named: itemArrImage_link)
-            let itemArrName = arrName[indexPath.row]
-            cell.homeNameSongLabel.text = itemArrName
-            let itemArrDesc = arrDesc[indexPath.row]
-            cell.homeDescSongLabel.text = itemArrDesc
             
             return cell
         } else if tableView == playerMini?.vocTableView {
@@ -594,7 +800,7 @@ extension ViewController: UITableViewDelegate {
         } else if tableView == playerMini?.vocTableView {
             return UITableViewAutomaticDimension
         } else { //if tableView == menu?.menuTableView {
-            return 25.0
+            return 30.0
         }
     }
     
@@ -603,7 +809,6 @@ extension ViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
         if tableView == playerMini?.playListSongTableView {
             guard let cell = tableView.cellForRow(at: indexPath) as? PlayListSongTableViewCell else {return}
             cell.musicPlayingImageView.image = UIImage(named: "PlayerMain-icon-MusicPlaying.png")
@@ -616,7 +821,10 @@ extension ViewController: UITableViewDelegate {
             audio_linkString = arrAudio_link[indexPath.row]
             handlePlaying()
         } else if tableView == homeTableView {
-            print("aaaaaaaaa")
+            UIView.animate(withDuration: 0.3, animations: { 
+                self.homeTableViewSpaceBottomConstraint.constant = 60.0
+                self.view.layoutIfNeeded()
+            })
             playerMini?.displayBottom(view: self.view)
             
             guard let cell = tableView.cellForRow(at: indexPath) as? TopicTableViewCell else {return}
@@ -634,21 +842,67 @@ extension ViewController: UITableViewDelegate {
             audio_linkString = arrAudio_link[indexPath.row]
             handlePlaying()
         } else if tableView == menu?.menuTableView {
+            indexPathSelected = IndexPath(row: 0, section: 0)
             guard let cell = tableView.cellForRow(at: indexPath) as? MenuTableViewCell else {return}
-            if cell.menuLabel.text == "Setting" {
-                if let settingVC = storyboard?.instantiateViewController(withIdentifier: "SettingViewController") as? SettingViewController {
-                    navigationController?.pushViewController(settingVC, animated: true)
+            if cell.menuLabel.text == TopicName.VocabularyFlashCards.rawValue{
+                
+            } else if cell.menuLabel.text == TopicName.VocabularyQuiz.rawValue {
+                
+            } else if cell.menuLabel.text == TopicName.Pronunciation.rawValue {
+                
+            } else if cell.menuLabel.text == TopicName.MyPlaylist.rawValue {
+                arrName.removeAll()
+                arrImage_link.removeAll()
+                arrDesc.removeAll()
+                for ( _, value) in dictNameFavorite {
+                    arrName.append(value)
                 }
+                for ( _, value) in dictImage_linkFavorite {
+                    arrImage_link.append(value)
+                }
+                for ( _, value) in dictDescFavorite {
+                    arrDesc.append(value)
+                }
+                id = -1
+                year = 0
+                
+                print(arrName)
+                firstYearCollectionView = true
+                hideMenu()
+                
+                yearCollectionView.reloadData()
+                homeTableView.reloadData()
+                print("abcde")
+            } else if cell.menuLabel.text == TopicName.Downloaded.rawValue {
+                
+            } else if cell.menuLabel.text == TopicName.UpgradeProVersion.rawValue {
+                
+            } else if cell.menuLabel.text == TopicName.FeedbackForUs.rawValue {
+                
+            } else if cell.menuLabel.text == TopicName.Setting.rawValue {
+                settingView?.openSettingView()
+            } else if cell.menuLabel.text == TopicName.RateMe.rawValue {
+                
             } else {
+                startAnimating()
                 id = managerAPI.getIDTopic(topicName: cell.menuLabel.text!)
                 arrYear = managerAPI.getArrYearOfTopic(id: id)
                 
-                firstYearCollectionView = true
-                yearCollectionView.reloadData()
-                self.getData()
-                homeTableView.reloadData()
+                if let firstYear = arrYear.first {
+                    year = firstYear
+                } else {
+                    year = 0
+                    stopAnimating()
+                }
                 
-                menu?.handleSelectedAndHideMenu()
+                firstYearCollectionView = true
+                hideMenu()
+                
+                DispatchQueue.main.async {
+                    self.yearCollectionView.reloadData()
+                    self.getData()
+                    self.homeTableView.reloadData()
+                }
             }
         }
         
@@ -697,13 +951,16 @@ extension ViewController: UICollectionViewDataSource {
 extension ViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if let cell = collectionView.cellForItem(at: indexPath) as? YearCollectionViewCell {
-            indexPathSelected = indexPath
-            cell.setIndicatorViewColor(color: UIColor.red)
-            cell.setYearLabelColor(color: UIColor.black)
-            collectionView.reloadData()
-            year = arrYear[indexPath.row]
-            getData()
-            homeTableView.reloadData()
+            if indexPath != indexPathSelected {
+                startAnimating()
+                cell.setIndicatorViewColor(color: UIColor.red)
+                cell.setYearLabelColor(color: UIColor.black)
+                collectionView.reloadData()
+                year = arrYear[indexPath.row]
+                self.getData()
+                homeTableView.reloadData()
+                indexPathSelected = indexPath
+            }
         }
     }
     
@@ -712,6 +969,12 @@ extension ViewController: UICollectionViewDelegate {
             cell.setIndicatorViewColor(color: UIColor.white)
             cell.setYearLabelColor(color: UIColor.lightGray)
         }
+    }
+}
+
+extension ViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: 70.0, height: collectionView.frame.height)
     }
 }
 

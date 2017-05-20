@@ -62,11 +62,9 @@ class TopicModel {
             
         } else {
             stringSplit = stringSplit[1].components(separatedBy: "')]")
-            //        let split = stringSplit[0]
             stringSplit = stringSplit[0].components(separatedBy: "'),('")
             for stringArr in stringSplit {
                 let arrString = stringArr.components(separatedBy: "','")
-                //            print(arrString)
                 arr.append(arrString)
                 
             }

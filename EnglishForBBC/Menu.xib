@@ -53,17 +53,14 @@
                         <constraint firstItem="Rxd-dR-VRb" firstAttribute="centerX" secondItem="G0Q-yD-jKm" secondAttribute="centerX" id="vn2-Gn-cTm"/>
                     </constraints>
                 </view>
-                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="none" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="EEp-1M-ktw">
-                    <rect key="frame" x="0.0" y="55" width="300" height="602"/>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" style="plain" separatorStyle="none" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="EEp-1M-ktw">
+                    <rect key="frame" x="0.0" y="55" width="300" height="612"/>
                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                 </tableView>
-                <view alpha="0.10000000000000001" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="l3m-dn-Ram">
+                <view alpha="0.5" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="l3m-dn-Ram">
                     <rect key="frame" x="300" y="0.0" width="75" height="667"/>
-                    <color key="backgroundColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     <gestureRecognizers/>
-                    <connections>
-                        <outletCollection property="gestureRecognizers" destination="uKG-re-Vuy" appends="YES" id="TvI-vY-7fe"/>
-                    </connections>
                 </view>
             </subviews>
             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
@@ -76,7 +73,7 @@
                 <constraint firstItem="G0Q-yD-jKm" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="bgT-ZW-50v"/>
                 <constraint firstItem="l3m-dn-Ram" firstAttribute="leading" secondItem="EEp-1M-ktw" secondAttribute="trailing" id="c02-pW-VLo"/>
                 <constraint firstItem="l3m-dn-Ram" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="j40-JO-A2a"/>
-                <constraint firstAttribute="bottom" secondItem="EEp-1M-ktw" secondAttribute="bottom" constant="10" id="uwm-jc-b8y"/>
+                <constraint firstAttribute="bottom" secondItem="EEp-1M-ktw" secondAttribute="bottom" id="uwm-jc-b8y"/>
                 <constraint firstAttribute="trailing" secondItem="EEp-1M-ktw" secondAttribute="trailing" constant="75" id="wOK-Is-3Mf"/>
                 <constraint firstAttribute="trailing" secondItem="l3m-dn-Ram" secondAttribute="trailing" id="yaN-DR-l6q"/>
             </constraints>
@@ -88,10 +85,5 @@
             </connections>
             <point key="canvasLocation" x="-442" y="-86"/>
         </view>
-        <tapGestureRecognizer id="uKG-re-Vuy">
-            <connections>
-                <action selector="hideMenu:" destination="iN0-l3-epB" id="nTA-z7-JCz"/>
-            </connections>
-        </tapGestureRecognizer>
     </objects>
 </document>

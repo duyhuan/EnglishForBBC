@@ -28,7 +28,8 @@ class PlayerMini: UIView {
     
     var isExchange = true
     
-    let height_mp3_mini: CGFloat = 60
+    let height_mp3_mini: CGFloat = 60.0
+    let lyricsTextView_leading: CGFloat = 10.0
     
     var lyricsTextView = UITextView()
     var vocTableView = UITableView()
@@ -41,11 +42,17 @@ class PlayerMini: UIView {
         let pagesScrollViewSize = scrollView.frame.size
         scrollView.contentSize = CGSize(width: pagesScrollViewSize.width * CGFloat(3), height: 0.0)
         
-        lyricsTextView = UITextView(frame: CGRect(x: 0, y: 0, width: pagesScrollViewSize.width, height: pagesScrollViewSize.height + 20.0))
+        lyricsTextView = UITextView(frame: CGRect(x: 0.0, y: 0.0, width: pagesScrollViewSize.width, height: pagesScrollViewSize.height))
         lyricsTextView.isEditable = false
         lyricsTextView.backgroundColor = UIColor.clear
         lyricsTextView.textColor = UIColor.white
         scrollView.addSubview(lyricsTextView)
+        
+        lyricsTextView.translatesAutoresizingMaskIntoConstraints = false
+        self.addConstraint(NSLayoutConstraint(item: lyricsTextView, attribute: .leading, relatedBy: .equal, toItem: scrollView, attribute: .leading, multiplier: 1.0, constant: lyricsTextView_leading))
+        self.addConstraint(NSLayoutConstraint(item: lyricsTextView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .width, multiplier: 1.0, constant: pagesScrollViewSize.width - lyricsTextView_leading*2))
+        self.addConstraint(NSLayoutConstraint(item: lyricsTextView, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .height, multiplier: 1.0, constant: scrollView.frame.height))
+        self.addConstraint(NSLayoutConstraint(item: lyricsTextView, attribute: .top, relatedBy: .equal, toItem: scrollView, attribute: .top, multiplier: 1.0, constant: 10))
         
         vocTableView.frame = CGRect(x: pagesScrollViewSize.width * CGFloat(1), y: 0, width: pagesScrollViewSize.width, height: pagesScrollViewSize.height + 10.0)
         vocTableView.register(VocTableViewCell.self, forCellReuseIdentifier: VocTableViewCell.identifier())

@@ -15,7 +15,7 @@ enum TopicID: Int {
     case ExpressEnglish = 2
     case WordsInTheNews = 3
     case TheEnglishWeSpeak = 4
-    case Drama = 5
+    case Drama = -1
     case NewReport = 6
     case LingoHack = 7
     case Pronunciation = 8
@@ -27,20 +27,28 @@ enum TopicID: Int {
 }
 
 enum TopicName: String {
-    case SixMinuteEnglish = "6 Minute English"
-    case EnglishAtWork = "English At Work"
-    case ExpressEnglish = "Express English"
-    case WordsInTheNews = "Words In The News"
-    case TheEnglishWeSpeak = "The English We Speak"
-    case Drama = "Drama"
-    case NewReport = "New Report"
-    case LingoHack = "LingoHack"
-    case Pronunciation = "Pronunciation"
-    case SixMinuteGrammar = "6 Minute Grammar"
     case EnglishConversation = "English Conversation"
+    case NewReport = "New Report"
+    case ExpressEnglish = "Express English"
+    case TheEnglishWeSpeak = "The English We Speak"
+    case WordsInTheNews = "Words In The News"
+    case LingoHack = "LingoHack"
+    case EnglishAtUniversity = "English At University"
+    case EnglishAtWork = "English At Work"
+    case SixMinuteEnglish = "6 Minute English"
+    case SixMinuteGrammar = "6 Minute Grammar"
     case SixMinuteVocabulary = "6 Minute Vocabulary"
     case NewReview = "New Review"
-    case EnglishAtUniversity = "English At University"
+    case Drama = "Drama"
+    case VocabularyFlashCards = "Vocabulary FlashCards"
+    case VocabularyQuiz = "Vocabulary Quiz"
+    case Pronunciation = "Pronunciation"
+    case MyPlaylist = "My Playlist"
+    case Downloaded = "Downloaded"
+    case UpgradeProVersion = "Upgrade Pro Version"
+    case FeedbackForUs = "Feedback for Us"
+    case Setting = "Setting"
+    case RateMe = "Rate me 5-stars"
 }
 
 enum Year {

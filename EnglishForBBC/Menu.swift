@@ -18,6 +18,7 @@ class Menu: UIView {
     
     override func awakeFromNib() {
         super.awakeFromNib()
+        
     }
     
     class func instanceFromNibMenu() -> Menu {
@@ -34,25 +35,8 @@ class Menu: UIView {
     
     func openMenu() {
         UIView.animate(withDuration: 0.3) {
-            self.rightView.alpha = 0.8
             self.frame.origin.x = 0
             self.frame = self.frame
-        }
-    }
-    
-    @IBAction func hideMenu(_ sender: UITapGestureRecognizer) {
-        UIView.animate(withDuration: 0.3) {
-            self.rightView.alpha = 0
-            let frame = self.frame
-            self.frame.origin.x = 0 - frame.width
-        }
-    }
-    
-    func handleSelectedAndHideMenu() {
-        UIView.animate(withDuration: 0.3) {
-            self.rightView.alpha = 0
-            let frame = self.frame
-            self.frame.origin.x = 0 - frame.width
         }
     }
     
