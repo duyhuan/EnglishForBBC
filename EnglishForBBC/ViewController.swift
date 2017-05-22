@@ -31,7 +31,7 @@ class ViewController: UIViewController {
     var isRepeat: Bool = false
     var isExchange: Bool = true
     var isLike: Bool = false
-    var audio_linkString = ""// "http://46.101.217.198/downloads.bbc.co.uk/learningenglish/intermediate/unit15/b2_u15_6min_vocab_discourse_markers_download.mp3"
+    var audio_linkString = ""
     var str = ""
     
     var id: Int = 0
@@ -55,11 +55,17 @@ class ViewController: UIViewController {
     var arrLyrics: [String] = [String]()
     var arrVoc: [String] = [String]()
     var vocAndMean: [[String]] = [[String]]()
-    var dictHomeLikeButton: [Int: Int] = [Int: Int]()
     
-    var dictNameFavorite: [Int: String] = [Int: String]()
-    var dictImage_linkFavorite: [Int: String] = [Int: String]()
-    var dictDescFavorite: [Int: String] = [Int: String]()
+    var arrNameFavorite: [String] = [String]()
+    var arrImage_linkFavorite: [String] = [String]()
+    var arrDescFavorite: [String] = [String]()
+    
+    var dictHomeLikeButton: [Int: Int] = [Int: Int]()
+    var dictYear: [Int: Int] = [Int: Int]()
+    var dictID: [Int: Int] = [Int: Int]()
+    var dictNameFavorite: [String: String] = [String: String]()
+    var dictImage_linkFavorite: [String: String] = [String: String]()
+    var dictDescFavorite: [String: String] = [String: String]()
     
     var playerMini: PlayerMini?
     let topicModel = TopicModel()
@@ -69,7 +75,7 @@ class ViewController: UIViewController {
     var settingView: SettingView?
     var opacityView: OpacityView?
     
-    var playingIndexPath: IndexPath = IndexPath()
+    var playingIndexPath: IndexPath = IndexPath(row: 0, section: 0)
     var indexPathSelected: IndexPath = IndexPath(row: 0, section: 0)
     
     var arrayTitleOfSection: [String] = [String]()
@@ -78,6 +84,7 @@ class ViewController: UIViewController {
     let heightSectionHeaderMenu: CGFloat = 15.0
     
     var activityIndicator: UIActivityIndicatorView = UIActivityIndicatorView()
+    var spiningActivity = MBProgressHUD()
     var refresher: UIRefreshControl?
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -124,6 +131,8 @@ class ViewController: UIViewController {
         playerMini?.nextMainPlayButton.addTarget(self, action: #selector(handleNextMainPlayButton), for: .touchUpInside)
         
         playerMini?.preMainPlayButton.addTarget(self, action: #selector(handlePreMainPlayButton), for: .touchUpInside)
+        playerMini?.nextMiniPlayButton.addTarget(self, action: #selector(handleNextMiniPlayButton), for: .touchUpInside)
+        playerMini?.preMiniPlayButton.addTarget(self, action: #selector(handlePreMiniPlayButton), for: .touchUpInside)
         
         menu?.rightView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(hideMenu)))
         menu?.rightView.isUserInteractionEnabled = true
@@ -134,6 +143,8 @@ class ViewController: UIViewController {
         playerMini?.vocTableView.delegate = self
         playerMini?.playListSongTableView.dataSource = self
         playerMini?.playListSongTableView.delegate = self
+        settingView?.settingTableView.dataSource = self
+        settingView?.settingTableView.delegate = self
         
         playerMini?.vocTableView.estimatedRowHeight = 100.0
         playerMini?.vocTableView.rowHeight = UITableViewAutomaticDimension
@@ -160,7 +171,9 @@ class ViewController: UIViewController {
         if year != 0 || id != -1 {
             getData()
         }
-        homeTableView.reloadData()
+        DispatchQueue.main.async {
+            self.homeTableView.reloadData()
+        }
         refresher?.endRefreshing()
     }
     
@@ -175,10 +188,14 @@ class ViewController: UIViewController {
     
     func startAnimating() {
         activityIndicator.startAnimating()
+        spiningActivity = MBProgressHUD.showAdded(to: self.view, animated: true)
+        spiningActivity.label.text = "Loading"
+        spiningActivity.detailsLabel.text = "Please wait"
     }
     
     func stopAnimating() {
         activityIndicator.stopAnimating()
+        MBProgressHUD.hide(for: self.view, animated: true)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -300,9 +317,16 @@ class ViewController: UIViewController {
     }
     
     func handleNextMainPlayButton() {
+        handleNextButton()
+    }
+    
+    func handlePreMainPlayButton() {
+        handlePreButton()
+    }
+    
+    func handleNextButton() {
         if playingIndexPath.row >= arrAudio_link.count - 2 {
             playerMini?.nextMainPlayButton.isEnabled = false
-            
         } else {
             playerMini?.nextMainPlayButton.isEnabled = true
         }
@@ -310,9 +334,13 @@ class ViewController: UIViewController {
         playerMini?.preMainPlayButton.isEnabled = true
         let newPlayingIndexPath = IndexPath(row: playingIndexPath.row + 1, section: 0)
         self.tableView((playerMini?.playListSongTableView)!, didSelectRowAt: newPlayingIndexPath)
+        DispatchQueue.main.async {
+            self.playerMini?.vocTableView.reloadData()
+            self.playerMini?.lyricsTextView.reloadInputViews()
+        }
     }
     
-    func handlePreMainPlayButton() {
+    func handlePreButton() {
         if playingIndexPath.row <= 1 {
             playerMini?.preMainPlayButton.isEnabled = false
         } else {
@@ -322,6 +350,18 @@ class ViewController: UIViewController {
         playerMini?.nextMainPlayButton.isEnabled = true
         let newPlayingIndexPath = IndexPath(row: playingIndexPath.row - 1, section: 0)
         self.tableView((playerMini?.playListSongTableView)!, didSelectRowAt: newPlayingIndexPath)
+        DispatchQueue.main.async {
+            self.playerMini?.vocTableView.reloadData()
+            self.playerMini?.lyricsTextView.reloadInputViews()
+        }
+    }
+    
+    func handleNextMiniPlayButton() {
+        handleNextButton()
+    }
+    
+    func handlePreMiniPlayButton() {
+        handlePreButton()
     }
     
     func getData() {
@@ -336,7 +376,6 @@ class ViewController: UIViewController {
         str = "{\"jsonrpc\":\"2.0\",\"method\":\"bbc_english.category.getSongFull\",\"id\":\"gtl_3\",\"params\":{\"id\": \(id),\"year\":\(year)},\"apiVersion\": \"v1\"}"
         
         if let arrNameObject = arrNameCache.object(forKey: str as AnyObject), let arrImage_linkObject = arrImage_linkCache.object(forKey: str as AnyObject), let arrDescObject = arrDescCache.object(forKey: str as AnyObject) {
-            //            , let arrAudio_linkObject = arrAudio_linkCache.object(forKey: str as AnyObject), let arrLyricsObject = arrLyricsCache.object(forKey: str as AnyObject), let arrVocObject = arrVocCache.object(forKey: str as AnyObject) {
             
             stopAnimating()
             if let arrNameObject = arrNameObject as? [String] {
@@ -511,8 +550,6 @@ class ViewController: UIViewController {
     }
     
     func handlePlayButton() {
-//        playerMini?.timeSlider.isEnabled = true
-        
         if isPlay {
             timerUpdateCurrentTime.invalidate()
             player.pause()
@@ -618,27 +655,29 @@ class ViewController: UIViewController {
     
     func handlePressHomeLikeButton(sender: UIButton) {
         let tag = sender.tag
-        
-        
+        let keyDict: String = "\(tag)\(id)\(year)"
         
         let imgOn = UIImage(named: "Home-button-like-on.png")
         let imgOff = UIImage(named: "Home-button-like-off.png")
         if sender.currentBackgroundImage == imgOn {
-            dictNameFavorite.removeValue(forKey: tag)
-            dictImage_linkFavorite.removeValue(forKey: tag)
-            dictDescFavorite.removeValue(forKey: tag)
+            dictNameFavorite.removeValue(forKey: keyDict)
+            dictImage_linkFavorite.removeValue(forKey: keyDict)
+            dictDescFavorite.removeValue(forKey: keyDict)
             
-            dictHomeLikeButton.removeValue(forKey: sender.tag)
+            dictYear.removeValue(forKey: tag)
+            dictID.removeValue(forKey: tag)
+            dictHomeLikeButton.removeValue(forKey: tag)
             sender.setBackgroundImage(imgOff, for: .normal)
         } else if sender.currentBackgroundImage == imgOff {
-            dictNameFavorite[tag] = arrName[tag]
-            dictImage_linkFavorite[tag] = arrImage_link[tag]
-            dictDescFavorite[tag] = arrDesc[tag]
+            dictNameFavorite[keyDict] = arrName[tag]
+            dictImage_linkFavorite[keyDict] = arrImage_link[tag]
+            dictDescFavorite[keyDict] = arrDesc[tag]
             
-            dictHomeLikeButton[sender.tag] = sender.tag
+            dictYear[tag] = year
+            dictID[tag] = id
+            dictHomeLikeButton[tag] = tag
             sender.setBackgroundImage(imgOn, for: .normal)
         }
-        
     }
     
     @IBAction func handleShowMenuButton(_ sender: UIButton) {
@@ -706,6 +745,9 @@ extension ViewController: UITableViewDataSource {
         
         if tableView == playerMini?.playListSongTableView {
             let cell = Bundle.main.loadNibNamed("PlayListSongTableViewCell", owner: self, options: nil)?.first as! PlayListSongTableViewCell
+            if indexPath.row == playingIndexPath.row {
+                cell.musicPlayingImageView.image = UIImage(named: "PlayerMain-icon-MusicPlaying.png")
+            }
             
             DispatchQueue.global().async {
                 let itemArrName = self.arrName[indexPath.row]
@@ -728,16 +770,6 @@ extension ViewController: UITableViewDataSource {
             let itemArrDesc = self.arrDesc[indexPath.row]
             
             DispatchQueue.global().async {
-                cell.homeLikeButton.tag = indexPath.row
-                cell.homeLikeButton.addTarget(self, action: #selector(self.handlePressHomeLikeButton), for: .touchUpInside)
-                for (key, _) in self.dictHomeLikeButton {
-                    if cell.homeLikeButton.tag == key {
-                        DispatchQueue.main.async {
-                            cell.homeLikeButton.setBackgroundImage(UIImage(named: "Home-button-like-on.png"), for: .normal)
-                        }
-                    }
-                }
-                
                 let url = URL(string: urlString)
                 if let imgCache = imageCache.object(forKey: urlString as AnyObject), let nameCache = nameCache.object(forKey: itemArrName as AnyObject), let descCache = descCache.object(forKey: itemArrDesc as AnyObject) {
                     DispatchQueue.main.async {
@@ -764,13 +796,28 @@ extension ViewController: UITableViewDataSource {
                     
                     
                 }
+                
+                
+                cell.homeLikeButton.tag = indexPath.row
+                cell.homeLikeButton.addTarget(self, action: #selector(self.handlePressHomeLikeButton), for: .touchUpInside)
+                
+            }
+            
+            for (key, _) in self.dictHomeLikeButton {
+                
+                    if cell.homeLikeButton.tag == key && year == dictYear[key] && id == dictID[key] {
+                        DispatchQueue.main.async {
+                            cell.homeLikeButton.setBackgroundImage(UIImage(named: "Home-button-like-on.png"), for: .normal)
+                        }
+                    }
+                
             }
             
             return cell
         } else if tableView == playerMini?.vocTableView {
             let cell = Bundle.main.loadNibNamed(VocTableViewCell.nibName(), owner: self, options: nil)?.first as! VocTableViewCell
-            
             let itemVocAndMean = vocAndMean[indexPath.row]
+            print(vocAndMean[indexPath.row])
             cell.setVocLabel(text: itemVocAndMean[0].uppercaseFirst)
             cell.setMeanOfVocLabel(text: itemVocAndMean[1].uppercaseFirst)
             
@@ -810,8 +857,18 @@ extension ViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if tableView == playerMini?.playListSongTableView {
+            if let cell_select_from_home = tableView.cellForRow(at: playingIndexPath) as? PlayListSongTableViewCell {
+                cell_select_from_home.musicPlayingImageView.image = nil
+            }
+            
             guard let cell = tableView.cellForRow(at: indexPath) as? PlayListSongTableViewCell else {return}
             cell.musicPlayingImageView.image = UIImage(named: "PlayerMain-icon-MusicPlaying.png")
+            
+            let itemArrVoc = arrVoc[indexPath.row]
+            vocAndMean = topicModel.handleVoc(voc: itemArrVoc)
+            DispatchQueue.main.async {
+                self.playerMini?.vocTableView.reloadData()
+            }
             playingIndexPath = indexPath
             
             handleLyricSong(lyris_string_url: arrLyrics[indexPath.row])
@@ -821,6 +878,7 @@ extension ViewController: UITableViewDelegate {
             audio_linkString = arrAudio_link[indexPath.row]
             handlePlaying()
         } else if tableView == homeTableView {
+            playingIndexPath.row = indexPath.row
             UIView.animate(withDuration: 0.3, animations: { 
                 self.homeTableViewSpaceBottomConstraint.constant = 60.0
                 self.view.layoutIfNeeded()
@@ -831,7 +889,10 @@ extension ViewController: UITableViewDelegate {
             
             let itemArrVoc = arrVoc[indexPath.row]
             vocAndMean = topicModel.handleVoc(voc: itemArrVoc)
-            playerMini?.vocTableView.reloadData()
+            DispatchQueue.main.async {
+                self.playerMini?.vocTableView.reloadData()
+                self.playerMini?.playListSongTableView.reloadData()
+            }
             
             playerMini?.playerMiniNameSongLabel.text = cell.homeNameSongLabel.text
             
@@ -851,28 +912,31 @@ extension ViewController: UITableViewDelegate {
             } else if cell.menuLabel.text == TopicName.Pronunciation.rawValue {
                 
             } else if cell.menuLabel.text == TopicName.MyPlaylist.rawValue {
-                arrName.removeAll()
-                arrImage_link.removeAll()
-                arrDesc.removeAll()
+                arrNameFavorite.removeAll()
+                arrImage_linkFavorite.removeAll()
+                arrDescFavorite.removeAll()
+                arrYear.removeAll()
+                
                 for ( _, value) in dictNameFavorite {
-                    arrName.append(value)
+                    arrNameFavorite.append(value)
                 }
                 for ( _, value) in dictImage_linkFavorite {
-                    arrImage_link.append(value)
+                    arrImage_linkFavorite.append(value)
                 }
                 for ( _, value) in dictDescFavorite {
-                    arrDesc.append(value)
+                    arrDescFavorite.append(value)
                 }
+                
+                arrName = arrNameFavorite
+                arrImage_link = arrImage_linkFavorite
+                arrDesc = arrDescFavorite
                 id = -1
                 year = 0
-                
-                print(arrName)
-                firstYearCollectionView = true
                 hideMenu()
-                
-                yearCollectionView.reloadData()
-                homeTableView.reloadData()
-                print("abcde")
+                DispatchQueue.main.async {
+                    self.yearCollectionView.reloadData()
+                    self.homeTableView.reloadData()
+                }
             } else if cell.menuLabel.text == TopicName.Downloaded.rawValue {
                 
             } else if cell.menuLabel.text == TopicName.UpgradeProVersion.rawValue {
@@ -955,11 +1019,14 @@ extension ViewController: UICollectionViewDelegate {
                 startAnimating()
                 cell.setIndicatorViewColor(color: UIColor.red)
                 cell.setYearLabelColor(color: UIColor.black)
-                collectionView.reloadData()
                 year = arrYear[indexPath.row]
                 self.getData()
-                homeTableView.reloadData()
                 indexPathSelected = indexPath
+                DispatchQueue.main.async {
+                    self.homeTableView.reloadData()
+                    collectionView.reloadData()
+                }
+                
             }
         }
     }

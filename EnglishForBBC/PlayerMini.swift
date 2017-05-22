@@ -22,6 +22,8 @@ class PlayerMini: UIView {
     @IBOutlet weak var nameSongOnTopLabel: UILabel!
     @IBOutlet weak var nextMainPlayButton: UIButton!
     @IBOutlet weak var preMainPlayButton: UIButton!
+    @IBOutlet weak var nextMiniPlayButton: UIButton!
+    @IBOutlet weak var preMiniPlayButton: UIButton!
     @IBOutlet weak var viewPlayer: UIView!
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var pageControl: UIPageControl!

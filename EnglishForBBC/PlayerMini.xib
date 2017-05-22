@@ -241,12 +241,14 @@
                 <outlet property="exchangeButton" destination="RMc-9R-zIv" id="VOk-if-eRz"/>
                 <outlet property="nameSongOnTopLabel" destination="wbF-6Y-nUp" id="6Wx-6X-zMo"/>
                 <outlet property="nextMainPlayButton" destination="VJY-vs-X1p" id="1ZG-0j-ONt"/>
+                <outlet property="nextMiniPlayButton" destination="VG8-Mj-dCY" id="IrM-to-tO9"/>
                 <outlet property="pageControl" destination="2dM-3c-n79" id="okU-Fq-uIP"/>
                 <outlet property="playMainPlayButton" destination="O3F-q8-k4P" id="yEd-zM-quI"/>
                 <outlet property="playMiniPlayButton" destination="wh7-4K-Bef" id="e54-ZX-ANY"/>
                 <outlet property="playerMiniAvatarImageView" destination="CnR-dK-Pz3" id="CJY-tI-uou"/>
                 <outlet property="playerMiniNameSongLabel" destination="2v4-NM-mKO" id="DKa-hJ-dp8"/>
                 <outlet property="preMainPlayButton" destination="DR6-V5-hS5" id="O36-Ye-YWp"/>
+                <outlet property="preMiniPlayButton" destination="qbA-gf-Xvu" id="c4g-IM-rgI"/>
                 <outlet property="repeatButton" destination="FTy-Vj-aM1" id="xyK-dd-QRh"/>
                 <outlet property="scrollView" destination="TI7-ph-HKp" id="dl9-57-ENe"/>
                 <outlet property="timeSlider" destination="NYJ-h6-uWU" id="lNf-QJ-YXE"/>

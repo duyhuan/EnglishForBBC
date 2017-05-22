@@ -11,9 +11,11 @@ import UIKit
 
 class SettingView: UIView {
     
-    let menu = Menu()
+    @IBOutlet weak var settingTableView: UITableView!
     
     override func awakeFromNib() {
+        
+        settingTableView.backgroundColor = UIColor.red
         self.alpha = 0
     }
     
@@ -22,7 +24,6 @@ class SettingView: UIView {
     }
     
     @IBAction func handleOpenMenuView(_ sender: UIButton) {
-        self.menu.alpha = 1
         self.hideSettingView()
     }
     

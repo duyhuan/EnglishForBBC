@@ -47,6 +47,10 @@
                     <constraints>
                         <constraint firstAttribute="height" constant="150" id="8GM-N2-ovB"/>
                     </constraints>
+                    <connections>
+                        <outlet property="dataSource" destination="iN0-l3-epB" id="vYC-Rc-CSG"/>
+                        <outlet property="delegate" destination="iN0-l3-epB" id="fZ3-Ab-k39"/>
+                    </connections>
                 </tableView>
             </subviews>
             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -58,6 +62,9 @@
                 <constraint firstItem="5aK-Fh-aLG" firstAttribute="top" secondItem="Gj9-UB-BXe" secondAttribute="bottom" id="hB3-Ve-J2z"/>
                 <constraint firstAttribute="trailing" secondItem="5aK-Fh-aLG" secondAttribute="trailing" id="k06-S3-P5E"/>
             </constraints>
+            <connections>
+                <outlet property="settingTableView" destination="5aK-Fh-aLG" id="jGd-Km-eHd"/>
+            </connections>
             <point key="canvasLocation" x="26.5" y="51.5"/>
         </view>
     </objects>

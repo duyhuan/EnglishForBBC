@@ -25,6 +25,9 @@
 		60302CF21ECA9C3200EBD686 /* YearCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60302CF11ECA9C3200EBD686 /* YearCollectionViewCell.swift */; };
 		607341C11EC63A15009ABBD6 /* PlayListSongTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607341BF1EC63A15009ABBD6 /* PlayListSongTableViewCell.swift */; };
 		607341C21EC63A15009ABBD6 /* PlayListSongTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607341C01EC63A15009ABBD6 /* PlayListSongTableViewCell.xib */; };
+		6093E39A1ED27B2A007F3401 /* MBProgressHUD.m in Sources */ = {isa = PBXBuildFile; fileRef = 6093E3991ED27B2A007F3401 /* MBProgressHUD.m */; };
+		6093E3A51ED2C1F8007F3401 /* SettingTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6093E3A31ED2C1F8007F3401 /* SettingTableViewCell.swift */; };
+		6093E3A61ED2C1F8007F3401 /* SettingTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6093E3A41ED2C1F8007F3401 /* SettingTableViewCell.xib */; };
 		60AE049F1EC2A8930046915C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60AE049E1EC2A8930046915C /* AppDelegate.swift */; };
 		60AE04A11EC2A8930046915C /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60AE04A01EC2A8930046915C /* ViewController.swift */; };
 		60AE04A41EC2A8930046915C /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 60AE04A21EC2A8930046915C /* Main.storyboard */; };
@@ -54,6 +57,11 @@
 		60302CF11ECA9C3200EBD686 /* YearCollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = YearCollectionViewCell.swift; sourceTree = "<group>"; };
 		607341BF1EC63A15009ABBD6 /* PlayListSongTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayListSongTableViewCell.swift; sourceTree = "<group>"; };
 		607341C01EC63A15009ABBD6 /* PlayListSongTableViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PlayListSongTableViewCell.xib; sourceTree = "<group>"; };
+		6093E3971ED27B2A007F3401 /* EnglishForBBC-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "EnglishForBBC-Bridging-Header.h"; sourceTree = "<group>"; };
+		6093E3981ED27B2A007F3401 /* MBProgressHUD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MBProgressHUD.h; sourceTree = "<group>"; };
+		6093E3991ED27B2A007F3401 /* MBProgressHUD.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MBProgressHUD.m; sourceTree = "<group>"; };
+		6093E3A31ED2C1F8007F3401 /* SettingTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingTableViewCell.swift; sourceTree = "<group>"; };
+		6093E3A41ED2C1F8007F3401 /* SettingTableViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SettingTableViewCell.xib; sourceTree = "<group>"; };
 		60AE049B1EC2A8930046915C /* EnglishForBBC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EnglishForBBC.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		60AE049E1EC2A8930046915C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		60AE04A01EC2A8930046915C /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -77,6 +85,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6093E3961ED27AD4007F3401 /* MBProgressHUD */ = {
+			isa = PBXGroup;
+			children = (
+				6093E3981ED27B2A007F3401 /* MBProgressHUD.h */,
+				6093E3991ED27B2A007F3401 /* MBProgressHUD.m */,
+				6093E3971ED27B2A007F3401 /* EnglishForBBC-Bridging-Header.h */,
+			);
+			name = MBProgressHUD;
+			sourceTree = "<group>";
+		};
 		60AE04921EC2A8930046915C = {
 			isa = PBXGroup;
 			children = (
@@ -96,6 +114,7 @@
 		60AE049D1EC2A8930046915C /* EnglishForBBC */ = {
 			isa = PBXGroup;
 			children = (
+				6093E3961ED27AD4007F3401 /* MBProgressHUD */,
 				60AE049E1EC2A8930046915C /* AppDelegate.swift */,
 				60AE04A01EC2A8930046915C /* ViewController.swift */,
 				60AE04A21EC2A8930046915C /* Main.storyboard */,
@@ -121,6 +140,8 @@
 				601889831ECC0A820094F3F0 /* ManagerAPI.swift */,
 				600776C61ECD407300D8BDDF /* SettingView.swift */,
 				600776C41ECD3FAE00D8BDDF /* SettingView.xib */,
+				6093E3A31ED2C1F8007F3401 /* SettingTableViewCell.swift */,
+				6093E3A41ED2C1F8007F3401 /* SettingTableViewCell.xib */,
 				60BF33181ECEF42C009FAA1D /* OpacityView.swift */,
 				60BF33161ECEF416009FAA1D /* OpacityView.xib */,
 			);
@@ -159,6 +180,7 @@
 				TargetAttributes = {
 					60AE049A1EC2A8930046915C = {
 						CreatedOnToolsVersion = 8.3.2;
+						LastSwiftMigration = 0830;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
@@ -194,6 +216,7 @@
 				601889801ECBE88D0094F3F0 /* VocTableViewCell.xib in Resources */,
 				607341C21EC63A15009ABBD6 /* PlayListSongTableViewCell.xib in Resources */,
 				60105FDF1EC9646700144BB6 /* MenuTableViewCell.xib in Resources */,
+				6093E3A61ED2C1F8007F3401 /* SettingTableViewCell.xib in Resources */,
 				600776C51ECD3FAE00D8BDDF /* SettingView.xib in Resources */,
 				60BF33171ECEF416009FAA1D /* OpacityView.xib in Resources */,
 				60AE04A91EC2A8930046915C /* LaunchScreen.storyboard in Resources */,
@@ -218,10 +241,12 @@
 				602263091EC5BD4F0065F03D /* PlayerMini.swift in Sources */,
 				6018897F1ECBE88D0094F3F0 /* VocTableViewCell.swift in Sources */,
 				60105FD51EC94A1E00144BB6 /* TopicTableViewCell.swift in Sources */,
+				6093E39A1ED27B2A007F3401 /* MBProgressHUD.m in Sources */,
 				600776C71ECD407300D8BDDF /* SettingView.swift in Sources */,
 				60C73F161ECABDBF001B0E44 /* Menu.swift in Sources */,
 				60105FDE1EC9646700144BB6 /* MenuTableViewCell.swift in Sources */,
 				60302CF21ECA9C3200EBD686 /* YearCollectionViewCell.swift in Sources */,
+				6093E3A51ED2C1F8007F3401 /* SettingTableViewCell.swift in Sources */,
 				607341C11EC63A15009ABBD6 /* PlayListSongTableViewCell.swift in Sources */,
 				601889841ECC0A820094F3F0 /* ManagerAPI.swift in Sources */,
 				6012F2591EC469FC00B1DA95 /* DetailVC.swift in Sources */,
@@ -355,10 +380,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ENABLE_MODULES = YES;
 				INFOPLIST_FILE = EnglishForBBC/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = duyhuan.EnglishForBBC;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "EnglishForBBC/EnglishForBBC-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
@@ -368,10 +396,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ENABLE_MODULES = YES;
 				INFOPLIST_FILE = EnglishForBBC/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = duyhuan.EnglishForBBC;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "EnglishForBBC/EnglishForBBC-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
