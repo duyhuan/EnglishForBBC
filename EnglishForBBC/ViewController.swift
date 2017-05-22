@@ -29,10 +29,11 @@ class ViewController: UIViewController {
     var player = AVPlayer()
     var isPlay: Bool = false
     var isRepeat: Bool = false
-    var isExchange: Bool = true
+    var isExchange: Bool = false
     var isLike: Bool = false
     var audio_linkString = ""
     var str = ""
+    var isEnd: Bool = false
     
     var id: Int = 0
     var year: Int = 2017
@@ -298,15 +299,74 @@ class ViewController: UIViewController {
     }
     
     func handleExchangeButton() {
-        if isExchange {
-            playerMini?.exchangeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Exchange-off.png"), for: .normal)
-            isExchange = false
-        } else {
+        if !isExchange {
             playerMini?.exchangeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Exchange-on.png"), for: .normal)
             isExchange = true
+        } else {
+            playerMini?.exchangeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Exchange-off.png"), for: .normal)
+            isExchange = false
         }
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleRepeatExchangeMusic), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
     }
     
+    func handleRepeatExchange() {
+        NotificationCenter.default.addObserver(self, selector: #selector(handleRepeatExchangeMusic), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
+    }
+    
+    func handleRepeatExchangeMusic() {
+        
+        if !isExchange {
+            if !isRepeat {
+                player.seek(to: kCMTimeZero)
+                player.pause()
+            } else {
+                player.seek(to: kCMTimeZero)
+                player.play()
+            }
+        } else {
+            
+            
+            if isEnd == true {
+                playingIndexPath.row += 1
+            }
+            audio_linkString = arrAudio_link[playingIndexPath.row]
+            let audioName = URL(string: audio_linkString)?.lastPathComponent
+            
+            let url = NSURL(fileURLWithPath: path)
+            let filePath = url.appendingPathComponent(audioName!)?.path
+            let fileManager = FileManager.default
+            if fileManager.fileExists(atPath: filePath!) {
+                playLocal()
+            } else {
+                playOnline()
+            }
+            player.seek(to: kCMTimeZero)
+            player.play()
+            
+            playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-playing.png"), for: .normal)
+            isPlay = true
+            playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-playing.png"), for: .normal)
+            timerUpdateCurrentTime = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateCurrentTime), userInfo: nil, repeats: true)
+            timerShowDuration = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(showDuration), userInfo: nil, repeats: true)
+            NotificationCenter.default.addObserver(self, selector: #selector(handleRepeatExchangeMusic), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
+            isEnd = true
+            
+            DispatchQueue.main.async {
+                self.playerMini?.playerMiniNameSongLabel.text = self.arrName[self.playingIndexPath.row]
+                let itemArrVoc = self.arrVoc[self.playingIndexPath.row]
+                self.vocAndMean = self.topicModel.handleVoc(voc: itemArrVoc)
+                self.playerMini?.nameSongOnTopLabel.text = self.arrName[self.playingIndexPath.row]
+                self.handleLyricSong(lyris_string_url: self.arrLyrics[self.playingIndexPath.row])
+//                self.playerMini?.lyricsTextView.reloadInputViews()
+                self.playerMini?.vocTableView.reloadData()
+                self.playerMini?.playListSongTableView.reloadData()
+            }
+            
+        }
+        
+    }
+
     func handleTimeSlider() {
         player.seek(to: CMTime(seconds: Double((playerMini?.timeSlider.value)! * Float((player.currentItem?.duration.seconds)!)) , preferredTimescale: 1))
         
@@ -336,8 +396,9 @@ class ViewController: UIViewController {
         self.tableView((playerMini?.playListSongTableView)!, didSelectRowAt: newPlayingIndexPath)
         DispatchQueue.main.async {
             self.playerMini?.vocTableView.reloadData()
-            self.playerMini?.lyricsTextView.reloadInputViews()
+//            self.playerMini?.lyricsTextView.reloadInputViews()
         }
+        playerMini?.playerMiniNameSongLabel.text = playerMini?.nameSongOnTopLabel.text
     }
     
     func handlePreButton() {
@@ -352,12 +413,14 @@ class ViewController: UIViewController {
         self.tableView((playerMini?.playListSongTableView)!, didSelectRowAt: newPlayingIndexPath)
         DispatchQueue.main.async {
             self.playerMini?.vocTableView.reloadData()
-            self.playerMini?.lyricsTextView.reloadInputViews()
+//            self.playerMini?.lyricsTextView.reloadInputViews()
         }
+        playerMini?.playerMiniNameSongLabel.text = playerMini?.nameSongOnTopLabel.text
     }
     
     func handleNextMiniPlayButton() {
         handleNextButton()
+        
     }
     
     func handlePreMiniPlayButton() {
@@ -817,7 +880,6 @@ extension ViewController: UITableViewDataSource {
         } else if tableView == playerMini?.vocTableView {
             let cell = Bundle.main.loadNibNamed(VocTableViewCell.nibName(), owner: self, options: nil)?.first as! VocTableViewCell
             let itemVocAndMean = vocAndMean[indexPath.row]
-            print(vocAndMean[indexPath.row])
             cell.setVocLabel(text: itemVocAndMean[0].uppercaseFirst)
             cell.setMeanOfVocLabel(text: itemVocAndMean[1].uppercaseFirst)
             
@@ -902,6 +964,7 @@ extension ViewController: UITableViewDelegate {
             player.pause()
             audio_linkString = arrAudio_link[indexPath.row]
             handlePlaying()
+            handleRepeatExchange()
         } else if tableView == menu?.menuTableView {
             indexPathSelected = IndexPath(row: 0, section: 0)
             guard let cell = tableView.cellForRow(at: indexPath) as? MenuTableViewCell else {return}

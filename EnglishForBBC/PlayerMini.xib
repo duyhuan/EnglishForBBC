@@ -161,7 +161,7 @@
                         </button>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="RMc-9R-zIv">
                             <rect key="frame" x="20" y="100" width="30" height="30"/>
-                            <state key="normal" backgroundImage="PlayerMain-icon-Exchange-on"/>
+                            <state key="normal" backgroundImage="PlayerMain-icon-Exchange-off"/>
                         </button>
                         <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="NYJ-h6-uWU">
                             <rect key="frame" x="43" y="53" width="289" height="31"/>
@@ -264,7 +264,7 @@
         </tapGestureRecognizer>
     </objects>
     <resources>
-        <image name="PlayerMain-icon-Exchange-on" width="30" height="30"/>
+        <image name="PlayerMain-icon-Exchange-off" width="30" height="30"/>
         <image name="PlayerMain-icon-Pause" width="33" height="33"/>
         <image name="PlayerMain-icon-Pre" width="33" height="33"/>
         <image name="PlayerMain-icon-down-off" width="23" height="23"/>
