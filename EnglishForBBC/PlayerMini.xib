@@ -246,7 +246,9 @@
                 <outlet property="playMainPlayButton" destination="O3F-q8-k4P" id="yEd-zM-quI"/>
                 <outlet property="playMiniPlayButton" destination="wh7-4K-Bef" id="e54-ZX-ANY"/>
                 <outlet property="playerMiniAvatarImageView" destination="CnR-dK-Pz3" id="CJY-tI-uou"/>
+                <outlet property="playerMiniLikeButton" destination="BLW-fv-gZW" id="V6m-cC-VhB"/>
                 <outlet property="playerMiniNameSongLabel" destination="2v4-NM-mKO" id="DKa-hJ-dp8"/>
+                <outlet property="player_main_down_button" destination="Dbx-Kr-aDM" id="xYK-3t-mmI"/>
                 <outlet property="preMainPlayButton" destination="DR6-V5-hS5" id="O36-Ye-YWp"/>
                 <outlet property="preMiniPlayButton" destination="qbA-gf-Xvu" id="c4g-IM-rgI"/>
                 <outlet property="repeatButton" destination="FTy-Vj-aM1" id="xyK-dd-QRh"/>

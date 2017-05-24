@@ -27,6 +27,7 @@ extension ViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if tableView == playerMini?.playListSongTableView {
+            playerMini?.playerMiniLikeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-off.png"), for: .normal)
             if let cell_select_from_home = tableView.cellForRow(at: playingIndexPath) as? PlayListSongTableViewCell {
                 cell_select_from_home.musicPlayingImageView.image = nil
             }
@@ -47,6 +48,14 @@ extension ViewController: UITableViewDelegate {
             player.pause()
             audio_linkString = arrAudio_link[indexPath.row]
             handlePlaying()
+            
+            for (_, value) in dictFavorite! {
+                let itemValue = value as? [String: Any]
+                if cell.nameSongLabel.text! == itemValue?["name"]! as? String {
+                    playerMini?.playerMiniLikeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-on.png"), for: .normal)
+                }
+            }
+            
         } else if tableView == homeTableView {
             playingIndexPath.row = indexPath.row
             UIView.animate(withDuration: 0.3, animations: {
@@ -73,6 +82,13 @@ extension ViewController: UITableViewDelegate {
             audio_linkString = arrAudio_link[indexPath.row]
             handlePlaying()
             handleRepeatExchange()
+            
+            if cell.homeLikeButton.currentBackgroundImage == UIImage(named: "Home-button-like-on.png") {
+                playerMini?.playerMiniLikeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-on.png"), for: .normal)
+            } else {
+                playerMini?.playerMiniLikeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-off.png"), for: .normal)
+            }
+            
         } else if tableView == menu?.menuTableView {
             indexPathSelected = IndexPath(row: 0, section: 0)
             guard let cell = tableView.cellForRow(at: indexPath) as? MenuTableViewCell else {return}
@@ -100,6 +116,8 @@ extension ViewController: UITableViewDelegate {
                 DispatchQueue.main.async {
                     self.yearCollectionView.reloadData()
                     self.homeTableView.reloadData()
+                    self.playerMini?.vocTableView.reloadData()
+                    self.playerMini?.playListSongTableView.reloadData()
                 }
                 
             } else if cell.menuLabel.text == TopicName.Downloaded.rawValue {

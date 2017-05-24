@@ -27,9 +27,6 @@ class ViewController: UIViewController {
     @IBOutlet weak var homeTableViewSpaceBottomConstraint: NSLayoutConstraint!
     
     var player = AVPlayer()
-    var isPlay: Bool = false
-    var isRepeat: Bool = false
-    var isExchange: Bool = false
     var audio_linkString = ""
     var str = ""
     var isEnd: Bool = false
@@ -82,6 +79,7 @@ class ViewController: UIViewController {
     
     var dictFavorite: NSMutableDictionary?
     let modelTopic = ModelTopic()
+    var listTopic: [TopicModel] = []
     let directories = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true) as Array
     var docPath = ""
     var plistPath = ""
@@ -132,6 +130,7 @@ class ViewController: UIViewController {
         playerMini?.preMainPlayButton.addTarget(self, action: #selector(handlePreMainPlayButton), for: .touchUpInside)
         playerMini?.nextMiniPlayButton.addTarget(self, action: #selector(handleNextMiniPlayButton), for: .touchUpInside)
         playerMini?.preMiniPlayButton.addTarget(self, action: #selector(handlePreMiniPlayButton), for: .touchUpInside)
+        playerMini?.playerMiniLikeButton.addTarget(self, action: #selector(handlePlayerMiniLikeButton), for: .touchUpInside)
         
         menu?.rightView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(hideMenu)))
         menu?.rightView.isUserInteractionEnabled = true
@@ -288,28 +287,23 @@ class ViewController: UIViewController {
     }
     
     func handleRepeatButton() {
-        if isRepeat {
-            playerMini?.repeatButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-repeat-off.png"), for: .normal)
-            isRepeat = false
-            
+        if playerMini?.repeatButton.currentBackgroundImage == UIImage(named: "PlayerMain-icon-repeat-off.png") {
+            player_main_repeat_on()
         } else {
-            playerMini?.repeatButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-repeat-on.png"), for: .normal)
-            isRepeat = true
+            player_main_repeat_off()
         }
         
-        NotificationCenter.default.addObserver(self, selector: #selector(playerDidFinishPlaying), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
+//        NotificationCenter.default.addObserver(self, selector: #selector(playerDidFinishPlaying), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
     }
     
     func handleExchangeButton() {
-        if !isExchange {
-            playerMini?.exchangeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Exchange-on.png"), for: .normal)
-            isExchange = true
+        if playerMini?.exchangeButton.currentBackgroundImage == UIImage(named: "PlayerMain-icon-Exchange-off.png") {
+            player_main_exchange_on()
         } else {
-            playerMini?.exchangeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Exchange-off.png"), for: .normal)
-            isExchange = false
+            player_main_exchange_off()
         }
         
-        NotificationCenter.default.addObserver(self, selector: #selector(handleRepeatExchangeMusic), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
+//        NotificationCenter.default.addObserver(self, selector: #selector(handleRepeatExchangeMusic), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
     }
     
     func handleRepeatExchange() {
@@ -317,55 +311,51 @@ class ViewController: UIViewController {
     }
     
     func handleRepeatExchangeMusic() {
-        
-        if !isExchange {
-            if !isRepeat {
-                player.seek(to: kCMTimeZero)
-                player.pause()
-            } else {
-                player.seek(to: kCMTimeZero)
-                player.play()
-            }
-        } else {
-            
-            
-            if isEnd == true {
-                playingIndexPath.row += 1
-            }
-            audio_linkString = arrAudio_link[playingIndexPath.row]
-            let audioName = URL(string: audio_linkString)?.lastPathComponent
-            
-            let url = NSURL(fileURLWithPath: path)
-            let filePath = url.appendingPathComponent(audioName!)?.path
-            let fileManager = FileManager.default
-            if fileManager.fileExists(atPath: filePath!) {
-                playLocal()
-            } else {
-                playOnline()
-            }
-            player.seek(to: kCMTimeZero)
-            player.play()
-            
-            playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-playing.png"), for: .normal)
-            isPlay = true
-            playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-playing.png"), for: .normal)
-            timerUpdateCurrentTime = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateCurrentTime), userInfo: nil, repeats: true)
-            timerShowDuration = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(showDuration), userInfo: nil, repeats: true)
-            NotificationCenter.default.addObserver(self, selector: #selector(handleRepeatExchangeMusic), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
-            isEnd = true
-            
-            DispatchQueue.main.async {
-                self.playerMini?.playerMiniNameSongLabel.text = self.arrName[self.playingIndexPath.row]
-                let itemArrVoc = self.arrVoc[self.playingIndexPath.row]
-                self.vocAndMean = self.topicModel.handleVoc(voc: itemArrVoc)
-                self.playerMini?.nameSongOnTopLabel.text = self.arrName[self.playingIndexPath.row]
-                self.handleLyricSong(lyris_string_url: self.arrLyrics[self.playingIndexPath.row])
-//                self.playerMini?.lyricsTextView.reloadInputViews()
-                self.playerMini?.vocTableView.reloadData()
-                self.playerMini?.playListSongTableView.reloadData()
-            }
-            
-        }
+//        if !isExchange {
+//            if !isRepeat {
+//                player.seek(to: kCMTimeZero)
+//                player.pause()
+//            } else {
+//                player.seek(to: kCMTimeZero)
+//                player.play()
+//            }
+//        } else {
+//            if isEnd == true {
+//                playingIndexPath.row += 1
+//            }
+//            audio_linkString = arrAudio_link[playingIndexPath.row]
+//            let audioName = URL(string: audio_linkString)?.lastPathComponent
+//            
+//            let url = NSURL(fileURLWithPath: path)
+//            let filePath = url.appendingPathComponent(audioName!)?.path
+//            let fileManager = FileManager.default
+//            if fileManager.fileExists(atPath: filePath!) {
+//                playLocal()
+//            } else {
+//                playOnline()
+//            }
+//            player.seek(to: kCMTimeZero)
+//            player.play()
+//            
+//            playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-playing.png"), for: .normal)
+//            playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-playing.png"), for: .normal)
+//            timerUpdateCurrentTime = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateCurrentTime), userInfo: nil, repeats: true)
+//            timerShowDuration = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(showDuration), userInfo: nil, repeats: true)
+//            NotificationCenter.default.addObserver(self, selector: #selector(handleRepeatExchangeMusic), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
+//            isEnd = true
+//            
+//            DispatchQueue.main.async {
+//                self.playerMini?.playerMiniNameSongLabel.text = self.arrName[self.playingIndexPath.row]
+//                let itemArrVoc = self.arrVoc[self.playingIndexPath.row]
+//                self.vocAndMean = self.topicModel.handleVoc(voc: itemArrVoc)
+//                self.playerMini?.nameSongOnTopLabel.text = self.arrName[self.playingIndexPath.row]
+//                self.handleLyricSong(lyris_string_url: self.arrLyrics[self.playingIndexPath.row])
+////                self.playerMini?.lyricsTextView.reloadInputViews()
+//                self.playerMini?.vocTableView.reloadData()
+//                self.playerMini?.playListSongTableView.reloadData()
+//            }
+//            
+//        }
         
     }
 
@@ -487,7 +477,7 @@ class ViewController: UIViewController {
         // insert json data to the request
         let data_body = str.data(using: .utf8)
         request.httpBody = data_body
-        
+        self.listTopic.removeAll()
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             
             guard let data = data, error == nil else {
@@ -502,10 +492,14 @@ class ViewController: UIViewController {
                         if let resultData = resultCategory["data"] {
                             if let result = resultData as? [[String: Any]] {
                                 for index in result {
+                                    let topic = TopicModel()
+                                    topic.name = index["name"] as! String
+                                    topic.image_link = index["image_link"] as! String
+                                    topic.desc = index["desc"] as! String
                                     self.topicModel.name = index["name"] as! String
                                     self.topicModel.image_link = index["image_link"] as! String
                                     self.topicModel.desc = index["desc"] as! String
-                                    
+                                    self.listTopic.append(topic)
                                     self.arrName.append(self.topicModel.name)
                                     self.arrImage_link.append(self.topicModel.image_link)
                                     self.arrDesc.append(self.topicModel.desc)
@@ -615,20 +609,93 @@ class ViewController: UIViewController {
     }
     
     func handlePlayButton() {
-        if isPlay {
-            timerUpdateCurrentTime.invalidate()
-            player.pause()
+//        handleRepeatExchange()
+        if playerMini?.playMainPlayButton.currentBackgroundImage == UIImage(named: "PlayerMain-icon-Pause.png") {
+            playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-playing.png"), for: .normal)
+            playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-playing.png"), for: .normal)
+            
+//            let audioName = URL(string: audio_linkString)?.lastPathComponent
+//            let url = NSURL(fileURLWithPath: path)
+//            let filePath = url.appendingPathComponent(audioName!)?.path
+//            let fileManager = FileManager.default
+//            if fileManager.fileExists(atPath: filePath!) {
+//                playLocal()
+//            } else {
+//                playOnline()
+//            }
+//            player.play()
+//            
+//            timerUpdateCurrentTime = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateCurrentTime), userInfo: nil, repeats: true)
+//            timerShowDuration = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(showDuration), userInfo: nil, repeats: true)
+            
+            
+            //            handlePlaying()
+            
+            NotificationCenter.default.addObserver(self, selector: #selector(hande_play_button), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
+        } else  {
             playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-pause.png"), for: .normal)
             playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Pause.png"), for: .normal)
-            isPlay = false
-        } else {
-            handlePlaying()
+            
+            timerUpdateCurrentTime.invalidate()
+            player.seek(to: kCMTimeZero)
+            player.pause()
         }
     }
     
+    func hande_play_button() {
+//        if !isExchange {
+//            if !isRepeat {
+//                player.seek(to: kCMTimeZero)
+//                player.pause()
+//            } else {
+//                player.seek(to: kCMTimeZero)
+//                player.play()
+//            }
+//        }
+//        else {
+//            if isEnd == true {
+//                playingIndexPath.row += 1
+//            }
+//            audio_linkString = arrAudio_link[playingIndexPath.row]
+//            let audioName = URL(string: audio_linkString)?.lastPathComponent
+//            
+//            let url = NSURL(fileURLWithPath: path)
+//            let filePath = url.appendingPathComponent(audioName!)?.path
+//            let fileManager = FileManager.default
+//            if fileManager.fileExists(atPath: filePath!) {
+//                playLocal()
+//            } else {
+//                playOnline()
+//            }
+//            player.seek(to: kCMTimeZero)
+//            player.play()
+//            
+//            playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-playing.png"), for: .normal)
+//            playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-playing.png"), for: .normal)
+//            timerUpdateCurrentTime = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateCurrentTime), userInfo: nil, repeats: true)
+//            timerShowDuration = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(showDuration), userInfo: nil, repeats: true)
+//            NotificationCenter.default.addObserver(self, selector: #selector(handleRepeatExchangeMusic), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
+//            isEnd = true
+//            
+//            DispatchQueue.main.async {
+//                self.playerMini?.playerMiniNameSongLabel.text = self.arrName[self.playingIndexPath.row]
+//                let itemArrVoc = self.arrVoc[self.playingIndexPath.row]
+//                self.vocAndMean = self.topicModel.handleVoc(voc: itemArrVoc)
+//                self.playerMini?.nameSongOnTopLabel.text = self.arrName[self.playingIndexPath.row]
+//                self.handleLyricSong(lyris_string_url: self.arrLyrics[self.playingIndexPath.row])
+//                //                self.playerMini?.lyricsTextView.reloadInputViews()
+//                self.playerMini?.vocTableView.reloadData()
+//                self.playerMini?.playListSongTableView.reloadData()
+//            }
+//            
+//        }
+    }
+    
     func handlePlaying() {
-        let audioName = URL(string: audio_linkString)?.lastPathComponent
+        player_mini_playing()
+        player_main_playing()
         
+        let audioName = URL(string: audio_linkString)?.lastPathComponent
         let url = NSURL(fileURLWithPath: path)
         let filePath = url.appendingPathComponent(audioName!)?.path
         let fileManager = FileManager.default
@@ -638,10 +705,7 @@ class ViewController: UIViewController {
             playOnline()
         }
         player.play()
-        
-        playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-playing.png"), for: .normal)
-        isPlay = true
-        playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-playing.png"), for: .normal)
+
         timerUpdateCurrentTime = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateCurrentTime), userInfo: nil, repeats: true)
         timerShowDuration = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(showDuration), userInfo: nil, repeats: true)
         
@@ -649,18 +713,66 @@ class ViewController: UIViewController {
     }
     
     func playerDidFinishPlaying() {
-        if isRepeat {
-            DispatchQueue.main.async {
-                self.player.seek(to: kCMTimeZero)
-                self.player.play()
+        if playerMini?.exchangeButton.currentBackgroundImage == UIImage(named: "PlayerMain-icon-Exchange-off.png") {
+            if playerMini?.repeatButton.currentBackgroundImage == UIImage(named: "PlayerMain-icon-repeat-off.png") {
+                player_mini_pause()
+                player_main_pause()
+                
+                player.seek(to: kCMTimeZero)
+                player.pause()
+            } else {
+                player.seek(to: kCMTimeZero)
+                player.play()
             }
         } else {
-            self.playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-pause.png"), for: .normal)
-            self.playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Pause.png"), for: .normal)
+//            if isEnd == true {
+                playingIndexPath.row += 1
+//            }
+            audio_linkString = arrAudio_link[playingIndexPath.row]
+            let audioName = URL(string: audio_linkString)?.lastPathComponent
+            let url = NSURL(fileURLWithPath: path)
+            let filePath = url.appendingPathComponent(audioName!)?.path
+            let fileManager = FileManager.default
+            if fileManager.fileExists(atPath: filePath!) {
+                playLocal()
+            } else {
+                playOnline()
+            }
             player.seek(to: kCMTimeZero)
-            player.pause()
-            isPlay = false
+            player.play()
+            
+//            playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-playing.png"), for: .normal)
+//            playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-playing.png"), for: .normal)
+            timerUpdateCurrentTime = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateCurrentTime), userInfo: nil, repeats: true)
+            timerShowDuration = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(showDuration), userInfo: nil, repeats: true)
+            NotificationCenter.default.addObserver(self, selector: #selector(handleRepeatExchangeMusic), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
+//            isEnd = true
+            
+            DispatchQueue.main.async {
+                self.playerMini?.playerMiniNameSongLabel.text = self.arrName[self.playingIndexPath.row]
+                let itemArrVoc = self.arrVoc[self.playingIndexPath.row]
+                self.vocAndMean = self.topicModel.handleVoc(voc: itemArrVoc)
+                self.playerMini?.nameSongOnTopLabel.text = self.arrName[self.playingIndexPath.row]
+                self.handleLyricSong(lyris_string_url: self.arrLyrics[self.playingIndexPath.row])
+                //                self.playerMini?.lyricsTextView.reloadInputViews()
+                self.playerMini?.vocTableView.reloadData()
+                self.playerMini?.playListSongTableView.reloadData()
+            }
+            
         }
+        
+//        if isRepeat {
+//            DispatchQueue.main.async {
+//                self.player.seek(to: kCMTimeZero)
+//                self.player.play()
+//            }
+//        } else {
+//            self.playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-pause.png"), for: .normal)
+//            self.playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Pause.png"), for: .normal)
+//            player.seek(to: kCMTimeZero)
+//            player.pause()
+//            isPlay = false
+//        }
     }
     
     func showDuration() {
@@ -739,12 +851,67 @@ class ViewController: UIViewController {
         
         if sender.currentBackgroundImage == UIImage(named: "Home-button-like-off.png") {
             sender.setBackgroundImage(UIImage(named: "Home-button-like-on.png"), for: .normal)
+//            playerMini?.playerMiniLikeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-on.png"), for: .normal)
             dictFavorite?[modelTopic.name!] = dictTopic
         } else {
             sender.setBackgroundImage(UIImage(named: "Home-button-like-off.png"), for: .normal)
             dictFavorite?.removeObject(forKey: modelTopic.name!)
         }
         dictFavorite?.write(toFile: plistPath, atomically: true)
+        
+        if id == -1 && year == 0 {
+            arrName.removeAll()
+            arrDesc.removeAll()
+            arrImage_link.removeAll()
+            
+            for (_ , value) in dictFavorite! {
+                let valueItem = value as! [String: Any]
+                arrName.append(valueItem["name"]! as! String)
+                arrDesc.append(valueItem["desc"]! as! String)
+                arrImage_link.append(valueItem["img"]! as! String)
+            }
+            
+            DispatchQueue.main.async {
+                self.homeTableView.reloadData()
+            }
+        }
+    }
+    
+    func handlePlayerMiniLikeButton(sender: UIButton) {
+        
+        modelTopic.id = id
+        modelTopic.year = year
+        modelTopic.name = arrName[playingIndexPath.row]
+        modelTopic.desc = arrDesc[playingIndexPath.row]
+        modelTopic.img = arrImage_link[playingIndexPath.row]
+        
+        let dictTopic: [String: Any] = ["id": modelTopic.id!, "year": modelTopic.year!, "name": modelTopic.name!, "desc": modelTopic.desc!, "img": modelTopic.img!]
+        
+        if sender.currentBackgroundImage == UIImage(named: "PlayerMain-icon-like-off.png") {
+            sender.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-on.png"), for: .normal)
+            dictFavorite?[modelTopic.name!] = dictTopic
+        } else {
+            sender.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-off.png"), for: .normal)
+            dictFavorite?.removeObject(forKey: modelTopic.name!)
+        }
+        dictFavorite?.write(toFile: plistPath, atomically: true)
+        
+        if id == -1 && year == 0 {
+            arrName.removeAll()
+            arrDesc.removeAll()
+            arrImage_link.removeAll()
+            
+            for (_ , value) in dictFavorite! {
+                let valueItem = value as! [String: Any]
+                arrName.append(valueItem["name"]! as! String)
+                arrDesc.append(valueItem["desc"]! as! String)
+                arrImage_link.append(valueItem["img"]! as! String)
+            }
+            
+            DispatchQueue.main.async {
+                self.homeTableView.reloadData()
+            }
+        }
     }
     
     @IBAction func handleShowMenuButton(_ sender: UIButton) {
@@ -759,6 +926,54 @@ class ViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
+    
+    func player_mini_pause() {
+        playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-pause.png"), for: .normal)
+    }
+    
+    func player_mini_playing() {
+        playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-playing.png"), for: .normal)
+    }
+    
+    func player_main_pause() {
+        playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-pause.png"), for: .normal)
+    }
+    
+    func player_main_playing() {
+        playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-playing.png"), for: .normal)
+    }
+    
+    func player_main_down_off() {
+        playerMini?.player_main_down_button.setBackgroundImage(UIImage(named: "PlayerMain-icon-down-off.png"), for: .normal)
+    }
+    
+    func player_main_down_on() {
+        playerMini?.player_main_down_button.setBackgroundImage(UIImage(named: "PlayerMain-icon-down-on.png"), for: .normal)
+    }
+    
+    func player_main_exchange_off() {
+        playerMini?.exchangeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Exchange-off.png"), for: .normal)
+    }
+    
+    func player_main_exchange_on() {
+        playerMini?.exchangeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Exchange-on.png"), for: .normal)
+    }
+    
+    func player_main_like_off(){
+        playerMini?.playerMiniLikeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-off.png"), for: .normal)
+    }
+    
+    func player_main_like_on() {
+        playerMini?.playerMiniLikeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-on.png"), for: .normal)
+    }
+    
+    func player_main_repeat_off() {
+        playerMini?.repeatButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-repeat-off.png"), for: .normal)
+    }
+    
+    func player_main_repeat_on() {
+        playerMini?.repeatButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-repeat-on.png"), for: .normal)
+    }
     
     
 }

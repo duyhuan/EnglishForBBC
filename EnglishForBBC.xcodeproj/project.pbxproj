@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		600776C51ECD3FAE00D8BDDF /* SettingView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 600776C41ECD3FAE00D8BDDF /* SettingView.xib */; };
 		600776C71ECD407300D8BDDF /* SettingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 600776C61ECD407300D8BDDF /* SettingView.swift */; };
+		600F49EB1ED52694008CDA7D /* Extention_UIButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 600F49EA1ED52694008CDA7D /* Extention_UIButton.swift */; };
 		60105FD31EC9487200144BB6 /* TopicModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60105FD21EC9487200144BB6 /* TopicModel.swift */; };
 		60105FD51EC94A1E00144BB6 /* TopicTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60105FD41EC94A1E00144BB6 /* TopicTableViewCell.swift */; };
 		60105FD91EC963B500144BB6 /* Menu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 60105FD81EC963B500144BB6 /* Menu.xib */; };
@@ -46,6 +47,7 @@
 /* Begin PBXFileReference section */
 		600776C41ECD3FAE00D8BDDF /* SettingView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SettingView.xib; sourceTree = "<group>"; };
 		600776C61ECD407300D8BDDF /* SettingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingView.swift; sourceTree = "<group>"; };
+		600F49EA1ED52694008CDA7D /* Extention_UIButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extention_UIButton.swift; sourceTree = "<group>"; };
 		60105FD21EC9487200144BB6 /* TopicModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TopicModel.swift; sourceTree = "<group>"; };
 		60105FD41EC94A1E00144BB6 /* TopicTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TopicTableViewCell.swift; sourceTree = "<group>"; };
 		60105FD81EC963B500144BB6 /* Menu.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = Menu.xib; sourceTree = "<group>"; };
@@ -95,6 +97,31 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		600F49EC1ED537EE008CDA7D /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				600F49EE1ED53882008CDA7D /* Model */,
+				600F49ED1ED537F3008CDA7D /* Service */,
+			);
+			name = Classes;
+			sourceTree = "<group>";
+		};
+		600F49ED1ED537F3008CDA7D /* Service */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Service;
+			sourceTree = "<group>";
+		};
+		600F49EE1ED53882008CDA7D /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				60105FD21EC9487200144BB6 /* TopicModel.swift */,
+				60AD6B351ED3FE5C008057E6 /* ModelTopic.swift */,
+			);
+			name = Model;
+			sourceTree = "<group>";
+		};
 		6093E3961ED27AD4007F3401 /* MBProgressHUD */ = {
 			isa = PBXGroup;
 			children = (
@@ -124,6 +151,7 @@
 		60AE049D1EC2A8930046915C /* EnglishForBBC */ = {
 			isa = PBXGroup;
 			children = (
+				600F49EC1ED537EE008CDA7D /* Classes */,
 				6093E3961ED27AD4007F3401 /* MBProgressHUD */,
 				60AE049E1EC2A8930046915C /* AppDelegate.swift */,
 				60AE04A01EC2A8930046915C /* ViewController.swift */,
@@ -139,7 +167,6 @@
 				607341C01EC63A15009ABBD6 /* PlayListSongTableViewCell.xib */,
 				6018897D1ECBE88D0094F3F0 /* VocTableViewCell.swift */,
 				6018897E1ECBE88D0094F3F0 /* VocTableViewCell.xib */,
-				60105FD21EC9487200144BB6 /* TopicModel.swift */,
 				60105FD41EC94A1E00144BB6 /* TopicTableViewCell.swift */,
 				60C73F151ECABDBF001B0E44 /* Menu.swift */,
 				60105FD81EC963B500144BB6 /* Menu.xib */,
@@ -158,7 +185,7 @@
 				60AD6B2D1ED3FC2B008057E6 /* ViewController_UITableViewDelegate.swift */,
 				60AD6B311ED3FCF4008057E6 /* ViewController_UICollectionViewDataSource.swift */,
 				60AD6B331ED3FD16008057E6 /* ViewController_UICollectionViewDelegate.swift */,
-				60AD6B351ED3FE5C008057E6 /* ModelTopic.swift */,
+				600F49EA1ED52694008CDA7D /* Extention_UIButton.swift */,
 			);
 			path = EnglishForBBC;
 			sourceTree = "<group>";
@@ -259,6 +286,7 @@
 				60AD6B2E1ED3FC2B008057E6 /* ViewController_UITableViewDelegate.swift in Sources */,
 				60105FD51EC94A1E00144BB6 /* TopicTableViewCell.swift in Sources */,
 				6093E39A1ED27B2A007F3401 /* MBProgressHUD.m in Sources */,
+				600F49EB1ED52694008CDA7D /* Extention_UIButton.swift in Sources */,
 				600776C71ECD407300D8BDDF /* SettingView.swift in Sources */,
 				60C73F161ECABDBF001B0E44 /* Menu.swift in Sources */,
 				60AD6B341ED3FD16008057E6 /* ViewController_UICollectionViewDelegate.swift in Sources */,

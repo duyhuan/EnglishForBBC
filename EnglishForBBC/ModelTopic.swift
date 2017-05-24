@@ -14,6 +14,7 @@ class ModelTopic {
     var name: String?
     var desc: String?
     var img: String?
+    var voc: String?
     
     init() {
         

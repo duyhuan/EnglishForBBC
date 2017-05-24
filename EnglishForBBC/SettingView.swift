@@ -15,7 +15,7 @@ class SettingView: UIView {
     
     override func awakeFromNib() {
         
-        settingTableView.backgroundColor = UIColor.red
+//        settingTableView.backgroundColor = UIColor.red
         self.alpha = 0
     }
     

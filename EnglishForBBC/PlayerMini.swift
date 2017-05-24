@@ -27,6 +27,8 @@ class PlayerMini: UIView {
     @IBOutlet weak var viewPlayer: UIView!
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var pageControl: UIPageControl!
+    @IBOutlet weak var playerMiniLikeButton: UIButton!
+    @IBOutlet weak var player_main_down_button: UIButton!
     
     var isExchange = true
     

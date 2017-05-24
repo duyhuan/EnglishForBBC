@@ -38,6 +38,7 @@
                     </switch>
                 </subviews>
             </tableViewCellContentView>
+            <color key="backgroundColor" red="0.34161092990000003" green="0.93714029740000004" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
             <connections>
                 <outlet property="detailTextLabelSetting" destination="Ym8-aT-KCO" id="iH3-aY-qyr"/>
                 <outlet property="switchOnOff" destination="bPl-yG-Dz8" id="ZFg-25-dzS"/>

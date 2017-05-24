@@ -110,19 +110,14 @@ extension ViewController: UITableViewDataSource {
                     }
                 }
                 
-                
-                
                 DispatchQueue.main.async {
                     for (_ , value) in self.dictFavorite! {
                         let itemValue = value as! [String: Any]
                         
-                        if cell.homeNameSongLabel.text! == itemValue["name"]! as? String
+                        if cell.homeNameSongLabel.text! == itemValue["name"]! as! String
 //                            , self.id == itemValue["id"]! as? Int, self.year == itemValue["year"]! as? Int, cell.homeDescSongLabel.text! == itemValue["desc"]! as? String, cell.homeImage.image! == UIImage(named: (itemValue["img"]! as? String)!)
                         {
                             cell.homeLikeButton.setBackgroundImage(UIImage(named: "Home-button-like-on.png"), for: .normal)
-                            print(cell.homeNameSongLabel.text!)
-                        } else {
-                            cell.homeLikeButton.setBackgroundImage(UIImage(named: "Home-button-like-off.png"), for: .normal)
                         }
                     }
                 }

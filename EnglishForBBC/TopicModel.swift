@@ -66,7 +66,7 @@ class TopicModel {
             for stringArr in stringSplit {
                 let arrString = stringArr.components(separatedBy: "','")
                 arr.append(arrString)
-                
+
             }
         }
         
