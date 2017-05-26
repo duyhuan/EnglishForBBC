@@ -189,12 +189,18 @@
                             </constraints>
                             <state key="normal" image="PlayerMain-icon-repeat-off"/>
                         </button>
+<<<<<<< HEAD
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="RMc-9R-zIv">
                             <rect key="frame" x="0.0" y="80" width="70" height="70"/>
                             <constraints>
                                 <constraint firstAttribute="width" secondItem="RMc-9R-zIv" secondAttribute="height" multiplier="1:1" id="L3n-F0-4Sa"/>
                             </constraints>
                             <state key="normal" image="PlayerMain-icon-Exchange-off"/>
+=======
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="RMc-9R-zIv">
+                            <rect key="frame" x="20" y="100" width="30" height="30"/>
+                            <state key="normal" backgroundImage="PlayerMain-icon-Exchange-off"/>
+>>>>>>> b29c07e43bd30a06c4640339bf0b9509cf51a552
                         </button>
                         <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="NYJ-h6-uWU">
                             <rect key="frame" x="43" y="50" width="289" height="31"/>
