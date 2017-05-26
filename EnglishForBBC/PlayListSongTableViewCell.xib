@@ -16,10 +16,10 @@
             <rect key="frame" x="0.0" y="0.0" width="320" height="48"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
             <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
-                <rect key="frame" x="0.0" y="0.0" width="320" height="47.5"/>
+                <rect key="frame" x="0.0" y="0.0" width="320" height="48"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="LPW-9F-9WR">
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="PlayerMain-icon-NewWord" translatesAutoresizingMaskIntoConstraints="NO" id="LPW-9F-9WR">
                         <rect key="frame" x="15" y="10" width="27.5" height="27.5"/>
                         <constraints>
                             <constraint firstAttribute="width" secondItem="LPW-9F-9WR" secondAttribute="height" multiplier="1:1" id="0A3-8B-eX9"/>
@@ -32,8 +32,8 @@
                         </constraints>
                     </imageView>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rsc-sT-nVR">
-                        <rect key="frame" x="52.5" y="16" width="212.5" height="16"/>
-                        <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                        <rect key="frame" x="52.5" y="15" width="37.5" height="18"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="15"/>
                         <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <nil key="highlightedColor"/>
                     </label>
@@ -47,7 +47,7 @@
                     <constraint firstItem="rsc-sT-nVR" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="VfF-aD-H9f"/>
                     <constraint firstItem="rsc-sT-nVR" firstAttribute="leading" secondItem="LPW-9F-9WR" secondAttribute="trailing" constant="10" id="dmT-G5-XRa"/>
                     <constraint firstItem="iO5-ir-Inm" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="15" id="j9b-M2-hAr"/>
-                    <constraint firstItem="iO5-ir-Inm" firstAttribute="leading" secondItem="rsc-sT-nVR" secondAttribute="trailing" constant="10" id="v8e-Un-vEC"/>
+                    <constraint firstItem="iO5-ir-Inm" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="rsc-sT-nVR" secondAttribute="trailing" constant="10" id="v8e-Un-vEC"/>
                 </constraints>
             </tableViewCellContentView>
             <color key="backgroundColor" red="0.25490196078431371" green="0.25490196078431371" blue="0.25490196078431371" alpha="1" colorSpace="calibratedRGB"/>
@@ -59,4 +59,7 @@
             <point key="canvasLocation" x="50" y="8"/>
         </tableViewCell>
     </objects>
+    <resources>
+        <image name="PlayerMain-icon-NewWord" width="26" height="26"/>
+    </resources>
 </document>

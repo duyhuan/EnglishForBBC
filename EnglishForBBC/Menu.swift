@@ -9,16 +9,31 @@
 import Foundation
 import UIKit
 
+protocol ProtocolDelegate {
+    func handleAlphaOpacityView(alpha: CGFloat)
+}
+
 class Menu: UIView {
     
     @IBOutlet weak var menuTableView: UITableView!
     @IBOutlet weak var rightView: UIView!
+    
+    var delegate: ProtocolDelegate?
     
     let height_menu: CGFloat = 50.0
     
     override func awakeFromNib() {
         super.awakeFromNib()
         
+        rightView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(hideMenu)))
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(hideMenu))
+        swipeLeft.direction = .left
+        rightView.addGestureRecognizer(swipeLeft)
+    }
+    
+    func setFrame(view: UIView) {
+        self.frame.size = view.frame.size
+        rightView.frame.size.width = view.frame.width - 50.0
     }
     
     class func instanceFromNibMenu() -> Menu {
@@ -37,6 +52,13 @@ class Menu: UIView {
         UIView.animate(withDuration: 0.3) {
             self.frame.origin.x = 0
             self.frame = self.frame
+        }
+    }
+    
+    func hideMenu() {
+        UIView.animate(withDuration: 0.3) {
+            self.frame.origin.x = 0 - self.frame.width
+            self.delegate?.handleAlphaOpacityView(alpha: 0)
         }
     }
     

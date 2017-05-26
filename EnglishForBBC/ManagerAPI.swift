@@ -15,7 +15,7 @@ enum TopicID: Int {
     case ExpressEnglish = 2
     case WordsInTheNews = 3
     case TheEnglishWeSpeak = 4
-    case Drama = -1
+    case Drama = 5
     case NewReport = 6
     case LingoHack = 7
     case Pronunciation = 8
@@ -49,11 +49,6 @@ enum TopicName: String {
     case FeedbackForUs = "Feedback for Us"
     case Setting = "Setting"
     case RateMe = "Rate me 5-stars"
-}
-
-enum Year {
-    case abcd
-    case cdef
 }
 
 let baseAPI = "https://avid-heading-737.appspot.com/_ah/api/rpc?prettyPrint=false"
@@ -131,7 +126,7 @@ class ManagerAPI {
             arrYearOfTopic = [2017, 2016, 2015, 2014]
             break
         case TopicID.Drama.rawValue:
-            arrYearOfTopic = []
+            arrYearOfTopic = [2017, 2016, 2015, 2014]
             break
         case TopicID.NewReport.rawValue:
             arrYearOfTopic = [2016, 2015]

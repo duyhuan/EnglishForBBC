@@ -17,7 +17,7 @@ extension ViewController: UITableViewDelegate {
         } else if tableView == playerMini?.vocTableView {
             return UITableViewAutomaticDimension
         } else { //if tableView == menu?.menuTableView {
-            return 30.0
+            return 45.0
         }
     }
     
@@ -27,7 +27,12 @@ extension ViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if tableView == playerMini?.playListSongTableView {
-            playerMini?.playerMiniLikeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-off.png"), for: .normal)
+            
+            timerShowDuration.invalidate()
+            timerUpdateCurrentTime.invalidate()
+            playerMini?.setTimeTotalLabel(text: "00:00")
+            
+            playerMini?.playerMiniLikeButton.setImage(UIImage(named: "PlayerMain-icon-like-off.png"), for: .normal)
             if let cell_select_from_home = tableView.cellForRow(at: playingIndexPath) as? PlayListSongTableViewCell {
                 cell_select_from_home.musicPlayingImageView.image = nil
             }
@@ -35,29 +40,48 @@ extension ViewController: UITableViewDelegate {
             guard let cell = tableView.cellForRow(at: indexPath) as? PlayListSongTableViewCell else {return}
             cell.musicPlayingImageView.image = UIImage(named: "PlayerMain-icon-MusicPlaying.png")
             
-            let itemArrVoc = arrVoc[indexPath.row]
-            vocAndMean = topicModel.handleVoc(voc: itemArrVoc)
+            let itemArrVoc = currentListData?[indexPath.row].voc
+            vocAndMean = topicModel.handleVoc(voc: itemArrVoc!)
             DispatchQueue.main.async {
                 self.playerMini?.vocTableView.reloadData()
             }
             playingIndexPath = indexPath
             
-            handleLyricSong(lyris_string_url: arrLyrics[indexPath.row])
-            playerMini?.nameSongOnTopLabel.text = arrName[indexPath.row]
+            handleLyricSong(lyris_string_url: (currentListData?[indexPath.row].html_link)!)
+            playerMini?.nameSongOnTopLabel.text = currentListData?[indexPath.row].name
             
             player.pause()
-            audio_linkString = arrAudio_link[indexPath.row]
+            audio_linkString = (currentListData?[indexPath.row].audio_link)!
             handlePlaying()
             
-            for (_, value) in dictFavorite! {
-                let itemValue = value as? [String: Any]
-                if cell.nameSongLabel.text! == itemValue?["name"]! as? String {
-                    playerMini?.playerMiniLikeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-on.png"), for: .normal)
+            if let url = URL(string: (currentListData?[indexPath.row].image_link)!) {
+                do {
+                    let data = try Data(contentsOf: url)
+                    playerMini?.playerMiniAvatarImageView.image = UIImage(data: data)
+                } catch {
+                    print(error)
+                }
+            }
+            
+            if let dict = dictFavorite {
+                for (_, value) in dict {
+                    let itemValue = value as? [String: Any]
+                    if cell.nameSongLabel.text! == itemValue?["name"]! as? String {
+                        playerMini?.playerMiniLikeButton.setImage(UIImage(named: "PlayerMain-icon-like-on.png"), for: .normal)
+                    }
                 }
             }
             
         } else if tableView == homeTableView {
+            
+            timerShowDuration.invalidate()
+            timerUpdateCurrentTime.invalidate()
+            playerMini?.setTimeTotalLabel(text: "00:00")
+            
             playingIndexPath.row = indexPath.row
+            
+            self.playerMini?.playingIndexPath = playingIndexPath
+            
             UIView.animate(withDuration: 0.3, animations: {
                 self.homeTableViewSpaceBottomConstraint.constant = 60.0
                 self.view.layoutIfNeeded()
@@ -66,8 +90,8 @@ extension ViewController: UITableViewDelegate {
             
             guard let cell = tableView.cellForRow(at: indexPath) as? TopicTableViewCell else {return}
             
-            let itemArrVoc = arrVoc[indexPath.row]
-            vocAndMean = topicModel.handleVoc(voc: itemArrVoc)
+            let itemArrVoc = currentListData?[indexPath.row].voc
+            vocAndMean = topicModel.handleVoc(voc: itemArrVoc!)
             DispatchQueue.main.async {
                 self.playerMini?.vocTableView.reloadData()
                 self.playerMini?.playListSongTableView.reloadData()
@@ -75,21 +99,33 @@ extension ViewController: UITableViewDelegate {
             
             playerMini?.playerMiniNameSongLabel.text = cell.homeNameSongLabel.text
             
-            handleLyricSong(lyris_string_url: arrLyrics[indexPath.row])
-            playerMini?.nameSongOnTopLabel.text = arrName[indexPath.row]
+            handleLyricSong(lyris_string_url: (currentListData?[indexPath.row].html_link)!)
+            playerMini?.nameSongOnTopLabel.text = currentListData?[indexPath.row].name
             
-            player.pause()
-            audio_linkString = arrAudio_link[indexPath.row]
-            handlePlaying()
-            handleRepeatExchange()
-            
-            if cell.homeLikeButton.currentBackgroundImage == UIImage(named: "Home-button-like-on.png") {
-                playerMini?.playerMiniLikeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-on.png"), for: .normal)
-            } else {
-                playerMini?.playerMiniLikeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-off.png"), for: .normal)
+            if let url = URL(string: (currentListData?[indexPath.row].image_link)!) {
+                do {
+                    let data = try Data(contentsOf: url)
+                    playerMini?.playerMiniAvatarImageView.image = UIImage(data: data)
+                } catch {
+                    print(error)
+                }
             }
             
+            player.pause()
+            audio_linkString = (currentListData?[indexPath.row].audio_link)!
+            handlePlaying()
+            
+            if cell.homeLikeButton.currentImage == UIImage(named: "Home-button-like-on.png") {
+                player_main_like_on()
+            } else {
+                player_main_like_off()
+            }
+            
+            playerMini?.setFontLyricTextView()
+            
         } else if tableView == menu?.menuTableView {
+            yearCollectionViewHeightConstraint.constant = 40
+            yearCollectionView.reloadData()
             indexPathSelected = IndexPath(row: 0, section: 0)
             guard let cell = tableView.cellForRow(at: indexPath) as? MenuTableViewCell else {return}
             if cell.menuLabel.text == TopicName.VocabularyFlashCards.rawValue{
@@ -99,26 +135,35 @@ extension ViewController: UITableViewDelegate {
             } else if cell.menuLabel.text == TopicName.Pronunciation.rawValue {
                 
             } else if cell.menuLabel.text == TopicName.MyPlaylist.rawValue {
-                hideMenu()
-                id = -1
-                year = 0
+                menu?.hideMenu()
+//                id = -1
+//                year = 0
                 arrYear.removeAll()
-                arrName.removeAll()
-                arrDesc.removeAll()
-                arrImage_link.removeAll()
                 
-                for (_ , value) in dictFavorite! {
-                    let valueItem = value as! [String: Any]
-                    arrName.append(valueItem["name"]! as! String)
-                    arrDesc.append(valueItem["desc"]! as! String)
-                    arrImage_link.append(valueItem["img"]! as! String)
-                }
-                DispatchQueue.main.async {
-                    self.yearCollectionView.reloadData()
-                    self.homeTableView.reloadData()
-                    self.playerMini?.vocTableView.reloadData()
-                    self.playerMini?.playListSongTableView.reloadData()
-                }
+//                var favoriteListData = [PostModel]()
+//                for (_ , value) in dictFavorite! {
+//                    let favorite = PostModel()
+//                    let valueItem = value as! [String: Any]
+//                    favorite.name = valueItem["name"] as! String
+//                    favorite.desc = valueItem["desc"] as! String
+//                    favorite.image_link = valueItem["image_link"] as! String
+//                    favorite.voc = valueItem["voc"] as! String
+//                    favorite.audio_link = valueItem["audio_link"] as! String
+//                    print(favorite.audio_link)
+//                    favorite.html_link = valueItem["html_link"] as! String
+//                    favoriteListData.append(favorite)
+//                }
+//                currentListData = favoriteListData
+                
+                currentListData = favoriteListData
+                
+                self.yearCollectionView.reloadData()
+                self.homeTableView.reloadData()
+//                self.playerMini?.vocTableView.reloadData()
+//                self.playerMini?.playListSongTableView.reloadData()
+//
+//                
+//                yearCollectionViewHeightConstraint.constant = 0
                 
             } else if cell.menuLabel.text == TopicName.Downloaded.rawValue {
                 
@@ -143,7 +188,7 @@ extension ViewController: UITableViewDelegate {
                 }
                 
                 firstYearCollectionView = true
-                hideMenu()
+                menu?.hideMenu()
                 
                 DispatchQueue.main.async {
                     self.yearCollectionView.reloadData()

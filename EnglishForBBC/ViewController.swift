@@ -9,27 +9,16 @@
 import UIKit
 import AVFoundation
 
-let arrNameCache = NSCache<AnyObject, AnyObject>()
-let arrAudio_linkCache = NSCache<AnyObject, AnyObject>()
-let arrImage_linkCache = NSCache<AnyObject, AnyObject>()
-let arrDescCache = NSCache<AnyObject, AnyObject>()
-let arrLyricsCache = NSCache<AnyObject, AnyObject>()
-let arrVocCache = NSCache<AnyObject, AnyObject>()
-let vocAndMeanCache = NSCache<AnyObject, AnyObject>()
-let imageCache = NSCache<AnyObject, AnyObject>()
-let nameCache = NSCache<AnyObject, AnyObject>()
-let descCache = NSCache<AnyObject, AnyObject>()
-
 class ViewController: UIViewController {
     
     @IBOutlet weak var yearCollectionView: UICollectionView!
     @IBOutlet weak var homeTableView: UITableView!
     @IBOutlet weak var homeTableViewSpaceBottomConstraint: NSLayoutConstraint!
+    @IBOutlet weak var yearCollectionViewHeightConstraint: NSLayoutConstraint!
     
     var player = AVPlayer()
     var audio_linkString = ""
     var str = ""
-    var isEnd: Bool = false
     
     var id: Int = 0
     var year: Int = 2017
@@ -45,12 +34,6 @@ class ViewController: UIViewController {
     var duration: Double!
     var firstPlay: Bool = true
     
-    var arrName: [String] = [String]()
-    var arrAudio_link: [String] = [String]()
-    var arrImage_link: [String] = [String]()
-    var arrDesc: [String] = [String]()
-    var arrLyrics: [String] = [String]()
-    var arrVoc: [String] = [String]()
     var vocAndMean: [[String]] = [[String]]()
     
     var arrNameFavorite: [String] = [String]()
@@ -71,18 +54,25 @@ class ViewController: UIViewController {
     var arrayTitleOfSection: [String] = [String]()
     var arrYear: [Int] = [2017, 2016, 2015, 2014, 2013, 2012, 2011, 2010, 2009, 2008]
     
-    let heightSectionHeaderMenu: CGFloat = 15.0
+    let heightSectionHeaderMenu: CGFloat = 30.0
     
     var activityIndicator: UIActivityIndicatorView = UIActivityIndicatorView()
     var spiningActivity = MBProgressHUD()
     var refresher: UIRefreshControl?
     
     var dictFavorite: NSMutableDictionary?
+    var listFavorite: [PostModel] = []
     let modelTopic = ModelTopic()
     var listTopic: [TopicModel] = []
     let directories = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true) as Array
     var docPath = ""
     var plistPath = ""
+    
+    var currentListData : [PostModel]?
+    var cachedListData: [String: [PostModel]] = [:]
+    var favoriteListData: [PostModel]?
+    
+    let audioSession = AVAudioSession.sharedInstance()
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return UIStatusBarStyle.lightContent
@@ -90,7 +80,6 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         str = "{\"jsonrpc\":\"2.0\",\"method\":\"bbc_english.category.getSongFull\",\"id\":\"gtl_3\",\"params\":{\"id\": \(id),\"year\":\(year)},\"apiVersion\": \"v1\"}"
         
         setupRefresher()
@@ -99,21 +88,19 @@ class ViewController: UIViewController {
         
         opacityView = OpacityView.instanceFromNib()
         menu = Menu.instanceFromNibMenu()
+        menu?.delegate = self
         playerMini = PlayerMini.instanceFromNib()
         settingView = SettingView.instanceFromNib()
-        
-//        playerMini?.timeSlider.isEnabled = false
         
         playerMini?.timeSlider.setThumbImage(UIImage(named: "PlayerMain-icon-lineplaying.png"), for: UIControlState.normal)
         playerMini?.timeSlider.setThumbImage(UIImage(named: "PlayerMain-icon-lineplaying.png"), for: UIControlState.highlighted)
         
-        let audioSession = AVAudioSession.sharedInstance()
-        
-        do {
-            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
-        } catch {
-            print(error)
-        }
+//        do {
+//            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+//            try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord)
+//        } catch {
+//            print(error)
+//        }
         
         playerMini?.playMiniPlayButton.addTarget(self, action: #selector(handlePlayMiniPlayButton), for: .touchUpInside)
         
@@ -125,15 +112,12 @@ class ViewController: UIViewController {
         
         playerMini?.timeSlider.addTarget(self, action: #selector(handleTimeSlider), for: .valueChanged)
         
-        playerMini?.nextMainPlayButton.addTarget(self, action: #selector(handleNextMainPlayButton), for: .touchUpInside)
-        
-        playerMini?.preMainPlayButton.addTarget(self, action: #selector(handlePreMainPlayButton), for: .touchUpInside)
-        playerMini?.nextMiniPlayButton.addTarget(self, action: #selector(handleNextMiniPlayButton), for: .touchUpInside)
-        playerMini?.preMiniPlayButton.addTarget(self, action: #selector(handlePreMiniPlayButton), for: .touchUpInside)
+        playerMini?.nextMainPlayButton.addTarget(self, action: #selector(handleNextButton), for: .touchUpInside)
+        playerMini?.preMainPlayButton.addTarget(self, action: #selector(handlePreButton), for: .touchUpInside)
+        playerMini?.nextMiniPlayButton.addTarget(self, action: #selector(handleNextButton), for: .touchUpInside)
+        playerMini?.preMiniPlayButton.addTarget(self, action: #selector(handlePreButton), for: .touchUpInside)
         playerMini?.playerMiniLikeButton.addTarget(self, action: #selector(handlePlayerMiniLikeButton), for: .touchUpInside)
-        
-        menu?.rightView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(hideMenu)))
-        menu?.rightView.isUserInteractionEnabled = true
+        playerMini?.playerMiniDownloadButton.addTarget(self, action: #selector(handleDownloadButton), for: .touchUpInside)
         
         menu?.menuTableView.dataSource = self
         menu?.menuTableView.delegate = self
@@ -148,19 +132,19 @@ class ViewController: UIViewController {
         playerMini?.vocTableView.rowHeight = UITableViewAutomaticDimension
         homeTableView.estimatedRowHeight = 100.0
         homeTableView.rowHeight = UITableViewAutomaticDimension
-        
+        homeTableView.tableFooterView = UIView()
         
         docPath = directories[0] as String
-        plistPath = docPath.appending("data.plist")
+        plistPath = docPath + "/data.plist"
         dictFavorite = NSMutableDictionary(contentsOfFile: plistPath)
+        
+        if dictFavorite == nil {
+            dictFavorite = NSMutableDictionary()
+        }
+        
     }
     
-    func hideMenu() {
-        UIView.animate(withDuration: 0.3) {
-            self.menu?.frame.origin.x = 0 - (self.menu?.frame.width)!
-            self.opacityView?.alpha = 0
-        }
-    }
+    
     
     func setupRefresher() {
         refresher = UIRefreshControl()
@@ -202,6 +186,7 @@ class ViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.playerMini?.setFrame(view: self.view)
         setupActivityIndicator()
         getData()
     }
@@ -209,8 +194,10 @@ class ViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         self.playerMini?.showInView(view: self.view)
+        self.playerMini?.setFrame(view: self.view)
         self.opacityView?.showInView(view: self.view)
         self.menu?.showInView(view: self.view)
+        self.menu?.setFrame(view: self.view)
         self.settingView?.showInView(view: self.view)
     }
     
@@ -256,8 +243,8 @@ class ViewController: UIViewController {
     }
     
     func handleLyricSong(lyris_string_url: String) {
-        let messageURL = URL(string: lyris_string_url)
-        let dataTask = URLSession.shared.dataTask(with: messageURL!) { (data, urlResponse, error) in
+        guard let messageURL = URL(string: lyris_string_url) else {return}
+        let dataTask = URLSession.shared.dataTask(with: messageURL) { (data, urlResponse, error) in
             
             if let error = error {
                 print(error.localizedDescription)
@@ -270,6 +257,7 @@ class ViewController: UIViewController {
                     documentAttributes: nil)
                 DispatchQueue.main.async {
                     self.playerMini?.lyricsTextView.attributedText = attrStr
+                        self.playerMini?.setFontLyricTextView()
                 }
                 
             }
@@ -279,84 +267,81 @@ class ViewController: UIViewController {
     }
     
     func handlePlayMiniPlayButton() {
-        handlePlayButton()
+        handlePlayMiniPlay()
+    }
+    
+    func handlePlayMiniPlay() {
+        if playerMini?.playMiniPlayButton.currentImage == UIImage(named: "PlayerMini-icon-pause.png") {
+            player_mini_playing()
+            player_main_playing()
+            
+            handlePlay()
+        } else {
+            player_mini_pause()
+            player_main_pause()
+            
+            handlePause()
+        }
     }
     
     func handlePlayMainPlayButton() {
-        handlePlayButton()
+        handlePlayMainPlay()
     }
     
+    func handlePlayMainPlay() {
+        if playerMini?.playMainPlayButton.currentImage == UIImage(named: "PlayerMain-icon-Pause.png") {
+            player_main_playing()
+            player_mini_playing()
+            
+            handlePlay()
+        } else {
+            player_main_pause()
+            player_mini_pause()
+            
+            handlePause()
+        }
+    }
+    
+    func handlePlay() {
+        
+        guard let audioName = URL(string: audio_linkString)?.lastPathComponent else {return}
+        let url = NSURL(fileURLWithPath: path)
+        let filePath = url.appendingPathComponent(audioName)?.path
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: filePath!) {
+            playLocal()
+        } else {
+            playOnline()
+        }
+        player.play()
+        
+        timerUpdateCurrentTime = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateCurrentTime), userInfo: nil, repeats: true)
+        timerShowDuration = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(showDuration), userInfo: nil, repeats: true)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(playerDidFinishPlaying), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
+    }
+    
+    func handlePause() {
+        player.seek(to: kCMTimeZero)
+        player.pause()
+        timerUpdateCurrentTime.invalidate()
+        timerShowDuration.invalidate()
+    }
+
     func handleRepeatButton() {
-        if playerMini?.repeatButton.currentBackgroundImage == UIImage(named: "PlayerMain-icon-repeat-off.png") {
+        if playerMini?.repeatButton.currentImage == UIImage(named: "PlayerMain-icon-repeat-off.png") {
             player_main_repeat_on()
         } else {
             player_main_repeat_off()
         }
-        
-//        NotificationCenter.default.addObserver(self, selector: #selector(playerDidFinishPlaying), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
     }
     
     func handleExchangeButton() {
-        if playerMini?.exchangeButton.currentBackgroundImage == UIImage(named: "PlayerMain-icon-Exchange-off.png") {
+        if playerMini?.exchangeButton.currentImage == UIImage(named: "PlayerMain-icon-Exchange-off.png") {
             player_main_exchange_on()
         } else {
             player_main_exchange_off()
         }
-        
-//        NotificationCenter.default.addObserver(self, selector: #selector(handleRepeatExchangeMusic), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
-    }
-    
-    func handleRepeatExchange() {
-        NotificationCenter.default.addObserver(self, selector: #selector(handleRepeatExchangeMusic), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
-    }
-    
-    func handleRepeatExchangeMusic() {
-//        if !isExchange {
-//            if !isRepeat {
-//                player.seek(to: kCMTimeZero)
-//                player.pause()
-//            } else {
-//                player.seek(to: kCMTimeZero)
-//                player.play()
-//            }
-//        } else {
-//            if isEnd == true {
-//                playingIndexPath.row += 1
-//            }
-//            audio_linkString = arrAudio_link[playingIndexPath.row]
-//            let audioName = URL(string: audio_linkString)?.lastPathComponent
-//            
-//            let url = NSURL(fileURLWithPath: path)
-//            let filePath = url.appendingPathComponent(audioName!)?.path
-//            let fileManager = FileManager.default
-//            if fileManager.fileExists(atPath: filePath!) {
-//                playLocal()
-//            } else {
-//                playOnline()
-//            }
-//            player.seek(to: kCMTimeZero)
-//            player.play()
-//            
-//            playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-playing.png"), for: .normal)
-//            playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-playing.png"), for: .normal)
-//            timerUpdateCurrentTime = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateCurrentTime), userInfo: nil, repeats: true)
-//            timerShowDuration = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(showDuration), userInfo: nil, repeats: true)
-//            NotificationCenter.default.addObserver(self, selector: #selector(handleRepeatExchangeMusic), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
-//            isEnd = true
-//            
-//            DispatchQueue.main.async {
-//                self.playerMini?.playerMiniNameSongLabel.text = self.arrName[self.playingIndexPath.row]
-//                let itemArrVoc = self.arrVoc[self.playingIndexPath.row]
-//                self.vocAndMean = self.topicModel.handleVoc(voc: itemArrVoc)
-//                self.playerMini?.nameSongOnTopLabel.text = self.arrName[self.playingIndexPath.row]
-//                self.handleLyricSong(lyris_string_url: self.arrLyrics[self.playingIndexPath.row])
-////                self.playerMini?.lyricsTextView.reloadInputViews()
-//                self.playerMini?.vocTableView.reloadData()
-//                self.playerMini?.playListSongTableView.reloadData()
-//            }
-//            
-//        }
-        
     }
 
     func handleTimeSlider() {
@@ -368,227 +353,43 @@ class ViewController: UIViewController {
         playerMini?.currentTimeLabel.text = String(format: "%02d:%02d", currentMinutes, currentSeconds)
     }
     
-    func handleNextMainPlayButton() {
-        handleNextButton()
-    }
-    
-    func handlePreMainPlayButton() {
-        handlePreButton()
-    }
-    
     func handleNextButton() {
-        print(playingIndexPath.row)
-        print(arrName.count)
-        if playingIndexPath.row >= arrName.count - 2 {
-            playerMini?.nextMainPlayButton.isEnabled = false
-        } else {
-            playerMini?.nextMainPlayButton.isEnabled = true
+        if (currentListData?.count)! > 1 && playingIndexPath.row <= (currentListData?.count)! - 2 {
+            let newPlayingIndexPath = IndexPath(row: playingIndexPath.row + 1, section: 0)
+            self.tableView((playerMini?.playListSongTableView)!, didSelectRowAt: newPlayingIndexPath)
+            DispatchQueue.main.async {
+                self.playerMini?.vocTableView.reloadData()
+            }
+            playerMini?.playerMiniNameSongLabel.text = playerMini?.nameSongOnTopLabel.text
         }
-        
-        playerMini?.preMainPlayButton.isEnabled = true
-        let newPlayingIndexPath = IndexPath(row: playingIndexPath.row + 1, section: 0)
-        self.tableView((playerMini?.playListSongTableView)!, didSelectRowAt: newPlayingIndexPath)
-        DispatchQueue.main.async {
-            self.playerMini?.vocTableView.reloadData()
-        }
-        playerMini?.playerMiniNameSongLabel.text = playerMini?.nameSongOnTopLabel.text
     }
     
     func handlePreButton() {
-        if playingIndexPath.row <= 1 {
-            playerMini?.preMainPlayButton.isEnabled = false
-        } else {
-            playerMini?.preMainPlayButton.isEnabled = true
+        if (currentListData?.count)! > 1 && playingIndexPath.row >= 1 {
+            let newPlayingIndexPath = IndexPath(row: playingIndexPath.row - 1, section: 0)
+            self.tableView((playerMini?.playListSongTableView)!, didSelectRowAt: newPlayingIndexPath)
+            DispatchQueue.main.async {
+                self.playerMini?.vocTableView.reloadData()
+            }
+            playerMini?.playerMiniNameSongLabel.text = playerMini?.nameSongOnTopLabel.text
         }
-        
-        playerMini?.nextMainPlayButton.isEnabled = true
-        let newPlayingIndexPath = IndexPath(row: playingIndexPath.row - 1, section: 0)
-        self.tableView((playerMini?.playListSongTableView)!, didSelectRowAt: newPlayingIndexPath)
-        DispatchQueue.main.async {
-            self.playerMini?.vocTableView.reloadData()
-        }
-        playerMini?.playerMiniNameSongLabel.text = playerMini?.nameSongOnTopLabel.text
-    }
-    
-    func handleNextMiniPlayButton() {
-        handleNextButton()
-        
-    }
-    
-    func handlePreMiniPlayButton() {
-        handlePreButton()
     }
     
     func getData() {
-        arrName.removeAll()
-        arrAudio_link.removeAll()
-        arrImage_link.removeAll()
-        arrDesc.removeAll()
-        arrLyrics.removeAll()
-        arrVoc.removeAll()
         vocAndMean.removeAll()
         
         str = "{\"jsonrpc\":\"2.0\",\"method\":\"bbc_english.category.getSongFull\",\"id\":\"gtl_3\",\"params\":{\"id\": \(id),\"year\":\(year)},\"apiVersion\": \"v1\"}"
         
-        if let arrNameObject = arrNameCache.object(forKey: str as AnyObject), let arrImage_linkObject = arrImage_linkCache.object(forKey: str as AnyObject), let arrDescObject = arrDescCache.object(forKey: str as AnyObject) {
+        if let listData = self.cachedListData[str]{
+            self.currentListData = listData
             
-            stopAnimating()
-            if let arrNameObject = arrNameObject as? [String] {
-                arrName = arrNameObject
-            }
-            if let arrImage_linkObject = arrImage_linkObject as? [String] {
-                arrImage_link = arrImage_linkObject
-            }
-            if let arrDescObject = arrDescObject as? [String] {
-                arrDesc = arrDescObject
-            }
-            
+            self.homeTableView.reloadData()
+            self.playerMini?.vocTableView.reloadData()
+            self.playerMini?.playListSongTableView.reloadData()
+            self.stopAnimating()
         } else {
-            handleDataFromAPIOnMenu(str: str)
+            loadDataOnMenu(params: str)
         }
-        
-        if let arrAudio_linkObject = arrAudio_linkCache.object(forKey: str as AnyObject), let arrLyricsObject = arrLyricsCache.object(forKey: str as AnyObject), let arrVocObject = arrVocCache.object(forKey: str as AnyObject) {
-            if let arrAudio_linkObject = arrAudio_linkObject as? [String] {
-                arrAudio_link = arrAudio_linkObject
-            }
-            if let arrLyricsObject = arrLyricsObject as? [String] {
-                arrLyrics = arrLyricsObject
-            }
-            if let arrVocObject = arrVocObject as? [String] {
-                arrVoc = arrVocObject
-            }
-            
-        } else {
-            handleDataFromAPIOnPlayer()
-        }
-        
-    }
-    
-    func handleDataFromAPIOnMenu(str: String) {
-        guard let url = URL(string: baseAPI) else {return}
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        
-        // content-type
-        let headers: Dictionary = ["Content-Type": "application/json"]
-        request.allHTTPHeaderFields = headers
-        
-        // insert json data to the request
-        let data_body = str.data(using: .utf8)
-        request.httpBody = data_body
-        self.listTopic.removeAll()
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            
-            guard let data = data, error == nil else {
-                print(error?.localizedDescription ?? "No data")
-                return
-            }
-            
-            let responseJSON = try? JSONSerialization.jsonObject(with: data, options: [])
-            if let responseJSON = responseJSON as? [String: Any] {
-                if let result = responseJSON["result"] {
-                    if let resultCategory = result as? [String: Any] {
-                        if let resultData = resultCategory["data"] {
-                            if let result = resultData as? [[String: Any]] {
-                                for index in result {
-                                    let topic = TopicModel()
-                                    topic.name = index["name"] as! String
-                                    topic.image_link = index["image_link"] as! String
-                                    topic.desc = index["desc"] as! String
-                                    self.topicModel.name = index["name"] as! String
-                                    self.topicModel.image_link = index["image_link"] as! String
-                                    self.topicModel.desc = index["desc"] as! String
-                                    self.listTopic.append(topic)
-                                    self.arrName.append(self.topicModel.name)
-                                    self.arrImage_link.append(self.topicModel.image_link)
-                                    self.arrDesc.append(self.topicModel.desc)
-                                }
-                                
-                                arrNameCache.setObject(self.arrName as AnyObject, forKey: str as AnyObject)
-                                arrImage_linkCache.setObject(self.arrImage_link as AnyObject, forKey: str as AnyObject)
-                                arrDescCache.setObject(self.arrDesc as AnyObject, forKey: str as AnyObject)
-                                
-                                DispatchQueue.main.async {
-                                    self.homeTableView.reloadData()
-                                    self.playerMini?.vocTableView.reloadData()
-                                    self.playerMini?.playListSongTableView.reloadData()
-                                    self.stopAnimating()
-                                }
-                                
-                            }
-                            
-                        }
-                    }
-                    
-                }
-            }
-            
-            
-        }
-        
-        task.resume()
-    }
-    
-    func handleDataFromAPIOnPlayer() {
-        guard let url = URL(string: baseAPI) else {return}
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        // content-type
-        let headers: Dictionary = ["Content-Type": "application/json"]
-        request.allHTTPHeaderFields = headers
-        // insert json data to the request
-        let data_body = str.data(using: .utf8)
-        request.httpBody = data_body
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else {
-                print(error?.localizedDescription ?? "No data")
-                return
-            }
-            let responseJSON = try? JSONSerialization.jsonObject(with: data, options: [])
-            if let responseJSON = responseJSON as? [String: Any] {
-                if let result = responseJSON["result"] {
-                    if let resultCategory = result as? [String: Any] {
-                        if let resultData = resultCategory["data"] {
-                            if let result = resultData as? [[String: Any]] {
-                                for index in result {
-                                    self.topicModel.audio_link = index["audio_link"] as! String
-                                    
-                                    if let index = index["html_link"] as? String, !index.isEmpty {
-                                        self.topicModel.html_link = index
-                                    }
-                                    if let index = index["voc"] as? String {
-                                        self.topicModel.voc = index
-                                    }
-                                    
-                                    self.arrAudio_link.append(self.topicModel.audio_link)
-                                    self.arrLyrics.append(self.topicModel.html_link)
-                                    self.arrVoc.append(self.topicModel.voc)
-                                }
-                                
-                                arrAudio_linkCache.setObject(self.arrAudio_link as AnyObject, forKey: self.str as AnyObject)
-                                arrLyricsCache.setObject(self.arrLyrics as AnyObject, forKey: self.str as AnyObject)
-                                arrVocCache.setObject(self.arrVoc as AnyObject, forKey: self.str as AnyObject)
-                                
-                                DispatchQueue.main.async {
-                                    self.homeTableView.reloadData()
-                                    self.playerMini?.vocTableView.reloadData()
-                                    self.playerMini?.playListSongTableView.reloadData()
-                                    self.stopAnimating()
-                                }
-                                
-                            }
-                            
-                        }
-                    }
-                    
-                }
-            }
-            
-            
-        }
-        
-        task.resume()
     }
     
     func playLocal() {
@@ -608,96 +409,21 @@ class ViewController: UIViewController {
         player.volume = 0.5
     }
     
-    func handlePlayButton() {
-//        handleRepeatExchange()
-        if playerMini?.playMainPlayButton.currentBackgroundImage == UIImage(named: "PlayerMain-icon-Pause.png") {
-            playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-playing.png"), for: .normal)
-            playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-playing.png"), for: .normal)
-            
-//            let audioName = URL(string: audio_linkString)?.lastPathComponent
-//            let url = NSURL(fileURLWithPath: path)
-//            let filePath = url.appendingPathComponent(audioName!)?.path
-//            let fileManager = FileManager.default
-//            if fileManager.fileExists(atPath: filePath!) {
-//                playLocal()
-//            } else {
-//                playOnline()
-//            }
-//            player.play()
-//            
-//            timerUpdateCurrentTime = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateCurrentTime), userInfo: nil, repeats: true)
-//            timerShowDuration = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(showDuration), userInfo: nil, repeats: true)
-            
-            
-            //            handlePlaying()
-            
-            NotificationCenter.default.addObserver(self, selector: #selector(hande_play_button), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
-        } else  {
-            playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-pause.png"), for: .normal)
-            playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Pause.png"), for: .normal)
-            
-            timerUpdateCurrentTime.invalidate()
-            player.seek(to: kCMTimeZero)
-            player.pause()
-        }
-    }
-    
-    func hande_play_button() {
-//        if !isExchange {
-//            if !isRepeat {
-//                player.seek(to: kCMTimeZero)
-//                player.pause()
-//            } else {
-//                player.seek(to: kCMTimeZero)
-//                player.play()
-//            }
-//        }
-//        else {
-//            if isEnd == true {
-//                playingIndexPath.row += 1
-//            }
-//            audio_linkString = arrAudio_link[playingIndexPath.row]
-//            let audioName = URL(string: audio_linkString)?.lastPathComponent
-//            
-//            let url = NSURL(fileURLWithPath: path)
-//            let filePath = url.appendingPathComponent(audioName!)?.path
-//            let fileManager = FileManager.default
-//            if fileManager.fileExists(atPath: filePath!) {
-//                playLocal()
-//            } else {
-//                playOnline()
-//            }
-//            player.seek(to: kCMTimeZero)
-//            player.play()
-//            
-//            playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-playing.png"), for: .normal)
-//            playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-playing.png"), for: .normal)
-//            timerUpdateCurrentTime = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateCurrentTime), userInfo: nil, repeats: true)
-//            timerShowDuration = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(showDuration), userInfo: nil, repeats: true)
-//            NotificationCenter.default.addObserver(self, selector: #selector(handleRepeatExchangeMusic), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
-//            isEnd = true
-//            
-//            DispatchQueue.main.async {
-//                self.playerMini?.playerMiniNameSongLabel.text = self.arrName[self.playingIndexPath.row]
-//                let itemArrVoc = self.arrVoc[self.playingIndexPath.row]
-//                self.vocAndMean = self.topicModel.handleVoc(voc: itemArrVoc)
-//                self.playerMini?.nameSongOnTopLabel.text = self.arrName[self.playingIndexPath.row]
-//                self.handleLyricSong(lyris_string_url: self.arrLyrics[self.playingIndexPath.row])
-//                //                self.playerMini?.lyricsTextView.reloadInputViews()
-//                self.playerMini?.vocTableView.reloadData()
-//                self.playerMini?.playListSongTableView.reloadData()
-//            }
-//            
-//        }
-    }
-    
     func handlePlaying() {
         player_mini_playing()
         player_main_playing()
         
-        let audioName = URL(string: audio_linkString)?.lastPathComponent
+        
+        do {
+//            try audioSession.setCategory(AVAudioSessionCategoryPlayback)
+            try audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord)
+        } catch {
+            print(error)
+        }
+        
+        guard let audioName = URL(string: audio_linkString)?.lastPathComponent else {return}
         let url = NSURL(fileURLWithPath: path)
-        let filePath = url.appendingPathComponent(audioName!)?.path
+        let filePath = url.appendingPathComponent(audioName)?.path
         let fileManager = FileManager.default
         if fileManager.fileExists(atPath: filePath!) {
             playLocal()
@@ -713,66 +439,46 @@ class ViewController: UIViewController {
     }
     
     func playerDidFinishPlaying() {
-        if playerMini?.exchangeButton.currentBackgroundImage == UIImage(named: "PlayerMain-icon-Exchange-off.png") {
-            if playerMini?.repeatButton.currentBackgroundImage == UIImage(named: "PlayerMain-icon-repeat-off.png") {
+        if playerMini?.repeatButton.currentImage == UIImage(named: "PlayerMain-icon-repeat-on.png") {
+            player.seek(to: kCMTimeZero)
+            player.play()
+        } else {
+            if playerMini?.exchangeButton.currentImage == UIImage(named: "PlayerMain-icon-Exchange-off.png") {
                 player_mini_pause()
                 player_main_pause()
                 
+                timerUpdateCurrentTime.invalidate()
+                timerShowDuration.invalidate()
                 player.seek(to: kCMTimeZero)
                 player.pause()
             } else {
+                playingIndexPath.row += 1
+                audio_linkString = (currentListData?[playingIndexPath.row].audio_link)!
+                let audioName = URL(string: audio_linkString)?.lastPathComponent
+                let url = NSURL(fileURLWithPath: path)
+                let filePath = url.appendingPathComponent(audioName!)?.path
+                let fileManager = FileManager.default
+                if fileManager.fileExists(atPath: filePath!) {
+                    playLocal()
+                } else {
+                    playOnline()
+                }
                 player.seek(to: kCMTimeZero)
                 player.play()
+                
+                NotificationCenter.default.addObserver(self, selector: #selector(playerDidFinishPlaying), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
+                
+                DispatchQueue.main.async {
+                    self.playerMini?.playerMiniNameSongLabel.text = self.currentListData?[self.playingIndexPath.row].name
+                    let itemArrVoc = self.currentListData?[self.playingIndexPath.row].voc
+                    self.vocAndMean = self.topicModel.handleVoc(voc: itemArrVoc!)
+                    self.playerMini?.nameSongOnTopLabel.text = self.currentListData?[self.playingIndexPath.row].name
+                    self.handleLyricSong(lyris_string_url: (self.currentListData?[self.playingIndexPath.row].html_link)!)
+                    self.playerMini?.vocTableView.reloadData()
+                    self.playerMini?.playListSongTableView.reloadData()
+                }
             }
-        } else {
-//            if isEnd == true {
-                playingIndexPath.row += 1
-//            }
-            audio_linkString = arrAudio_link[playingIndexPath.row]
-            let audioName = URL(string: audio_linkString)?.lastPathComponent
-            let url = NSURL(fileURLWithPath: path)
-            let filePath = url.appendingPathComponent(audioName!)?.path
-            let fileManager = FileManager.default
-            if fileManager.fileExists(atPath: filePath!) {
-                playLocal()
-            } else {
-                playOnline()
-            }
-            player.seek(to: kCMTimeZero)
-            player.play()
-            
-//            playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-playing.png"), for: .normal)
-//            playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-playing.png"), for: .normal)
-            timerUpdateCurrentTime = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateCurrentTime), userInfo: nil, repeats: true)
-            timerShowDuration = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(showDuration), userInfo: nil, repeats: true)
-            NotificationCenter.default.addObserver(self, selector: #selector(handleRepeatExchangeMusic), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
-//            isEnd = true
-            
-            DispatchQueue.main.async {
-                self.playerMini?.playerMiniNameSongLabel.text = self.arrName[self.playingIndexPath.row]
-                let itemArrVoc = self.arrVoc[self.playingIndexPath.row]
-                self.vocAndMean = self.topicModel.handleVoc(voc: itemArrVoc)
-                self.playerMini?.nameSongOnTopLabel.text = self.arrName[self.playingIndexPath.row]
-                self.handleLyricSong(lyris_string_url: self.arrLyrics[self.playingIndexPath.row])
-                //                self.playerMini?.lyricsTextView.reloadInputViews()
-                self.playerMini?.vocTableView.reloadData()
-                self.playerMini?.playListSongTableView.reloadData()
-            }
-            
         }
-        
-//        if isRepeat {
-//            DispatchQueue.main.async {
-//                self.player.seek(to: kCMTimeZero)
-//                self.player.play()
-//            }
-//        } else {
-//            self.playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-pause.png"), for: .normal)
-//            self.playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Pause.png"), for: .normal)
-//            player.seek(to: kCMTimeZero)
-//            player.pause()
-//            isPlay = false
-//        }
     }
     
     func showDuration() {
@@ -795,7 +501,13 @@ class ViewController: UIViewController {
         playerMini?.timeSlider.value = Float(timeCurrent / duration)
     }
     
-    @IBAction func handleDownloadButton(_ sender: UIButton) {
+    func handleDownloadButton(_ sender: UIButton) {
+        
+        if sender.currentImage == UIImage(named: "PlayerMain-icon-down-off.png") {
+            sender.setImage(UIImage(named: "PlayerMain-icon-down-on.png"), for: .normal)
+        } else {
+            sender.setImage(UIImage(named: "PlayerMain-icon-down-off.png"), for: .normal)
+        }
         
         let documentsUrl:URL =  FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first as URL!
         let audioName = URL(string: audio_linkString)?.lastPathComponent
@@ -834,79 +546,95 @@ class ViewController: UIViewController {
 //        let fileManager = FileManager.default
 //        if !fileManager.fileExists(atPath: plistPath) {
 //            do {
-//                try fileManager.copyItem(atPath: path!, toPath: plistPath)
+//                if let bundle = Bundle.main.path(forResource: "data", ofType: "plist") {
+//                    try fileManager.copyItem(atPath: bundle, toPath: plistPath)
+//                }
 //            } catch {
 //                print("Copy failure")
 //            }
 //        }
         
         let tag = sender.tag
+        
         modelTopic.id = id
         modelTopic.year = year
-        modelTopic.name = arrName[tag]
-        modelTopic.desc = arrDesc[tag]
-        modelTopic.img = arrImage_link[tag]
+        modelTopic.name = currentListData?[tag].name
+        modelTopic.desc = currentListData?[tag].desc
+        modelTopic.image_link = currentListData?[tag].image_link
+        modelTopic.voc = currentListData?[tag].voc
+        modelTopic.html_link = currentListData?[tag].html_link
+        modelTopic.audio_link = currentListData?[tag].audio_link
         
-        let dictTopic: [String: Any] = ["id": modelTopic.id!, "year": modelTopic.year!, "name": modelTopic.name!, "desc": modelTopic.desc!, "img": modelTopic.img!]
+        let dictTopic: [String: Any] = ["id": modelTopic.id!, "year": modelTopic.year!, "name": modelTopic.name!, "desc": modelTopic.desc!, "image_link": modelTopic.image_link!, "voc": modelTopic.voc!, "html_link": modelTopic.html_link!, "audio_link": modelTopic.audio_link!]
         
-        if sender.currentBackgroundImage == UIImage(named: "Home-button-like-off.png") {
-            sender.setBackgroundImage(UIImage(named: "Home-button-like-on.png"), for: .normal)
-//            playerMini?.playerMiniLikeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-on.png"), for: .normal)
+        if sender.currentImage == UIImage(named: "Home-button-like-off.png") {
+            sender.setImage(UIImage(named: "Home-button-like-on.png"), for: .normal)
             dictFavorite?[modelTopic.name!] = dictTopic
         } else {
-            sender.setBackgroundImage(UIImage(named: "Home-button-like-off.png"), for: .normal)
+            sender.setImage(UIImage(named: "Home-button-like-off.png"), for: .normal)
             dictFavorite?.removeObject(forKey: modelTopic.name!)
         }
         dictFavorite?.write(toFile: plistPath, atomically: true)
-        
-        if id == -1 && year == 0 {
-            arrName.removeAll()
-            arrDesc.removeAll()
-            arrImage_link.removeAll()
-            
+        favoriteListData = [PostModel]()
+//        if id == -1 && year == 0 {
             for (_ , value) in dictFavorite! {
+                let favorite = PostModel()
                 let valueItem = value as! [String: Any]
-                arrName.append(valueItem["name"]! as! String)
-                arrDesc.append(valueItem["desc"]! as! String)
-                arrImage_link.append(valueItem["img"]! as! String)
+                favorite.name = valueItem["name"] as! String
+                favorite.desc = valueItem["desc"] as! String
+                favorite.image_link = valueItem["image_link"] as! String
+                favorite.audio_link = valueItem["audio_link"] as! String
+                if let valueItemVoc = valueItem["voc"] as? String {
+                    favorite.voc = valueItemVoc
+                }
+                if let valueItemHtml_link = valueItem["html_link"] as? String {
+                    favorite.html_link = valueItemHtml_link
+                }
+                favoriteListData?.append(favorite)
             }
-            
+//            currentListData = favoriteListData
+        
             DispatchQueue.main.async {
                 self.homeTableView.reloadData()
             }
-        }
+//        }
     }
     
     func handlePlayerMiniLikeButton(sender: UIButton) {
-        
         modelTopic.id = id
         modelTopic.year = year
-        modelTopic.name = arrName[playingIndexPath.row]
-        modelTopic.desc = arrDesc[playingIndexPath.row]
-        modelTopic.img = arrImage_link[playingIndexPath.row]
+        modelTopic.name = currentListData?[playingIndexPath.row].name
+        modelTopic.desc = currentListData?[playingIndexPath.row].desc
+        modelTopic.image_link = currentListData?[playingIndexPath.row].image_link
+        modelTopic.voc = currentListData?[playingIndexPath.row].voc
+        modelTopic.html_link = currentListData?[playingIndexPath.row].html_link
+        modelTopic.audio_link = currentListData?[playingIndexPath.row].audio_link
         
-        let dictTopic: [String: Any] = ["id": modelTopic.id!, "year": modelTopic.year!, "name": modelTopic.name!, "desc": modelTopic.desc!, "img": modelTopic.img!]
+        let dictTopic: [String: Any] = ["id": modelTopic.id!, "year": modelTopic.year!, "name": modelTopic.name!, "desc": modelTopic.desc!, "image_link": modelTopic.image_link!, "voc": modelTopic.voc!, "html_link": modelTopic.html_link!, "audio_link": modelTopic.audio_link!]
         
-        if sender.currentBackgroundImage == UIImage(named: "PlayerMain-icon-like-off.png") {
-            sender.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-on.png"), for: .normal)
+        if sender.currentImage == UIImage(named: "PlayerMain-icon-like-off.png") {
+            player_main_like_on()
+            sender.setImage(UIImage(named: "PlayerMain-icon-like-on.png"), for: .normal)
             dictFavorite?[modelTopic.name!] = dictTopic
         } else {
-            sender.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-off.png"), for: .normal)
+            player_main_like_off()
             dictFavorite?.removeObject(forKey: modelTopic.name!)
         }
+        homeTableView.reloadData()
         dictFavorite?.write(toFile: plistPath, atomically: true)
         
         if id == -1 && year == 0 {
-            arrName.removeAll()
-            arrDesc.removeAll()
-            arrImage_link.removeAll()
             
+            var favoriteListData = [PostModel]()
             for (_ , value) in dictFavorite! {
+                let favorite = PostModel()
                 let valueItem = value as! [String: Any]
-                arrName.append(valueItem["name"]! as! String)
-                arrDesc.append(valueItem["desc"]! as! String)
-                arrImage_link.append(valueItem["img"]! as! String)
+                favorite.name = valueItem["name"] as! String
+                favorite.desc = valueItem["desc"] as! String
+                favorite.image_link = valueItem["img"] as! String
+                favoriteListData.append(favorite)
             }
+            currentListData = favoriteListData
             
             DispatchQueue.main.async {
                 self.homeTableView.reloadData()
@@ -926,55 +654,73 @@ class ViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
-    
     func player_mini_pause() {
-        playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-pause.png"), for: .normal)
+        playerMini?.playMiniPlayButton.setImage(UIImage(named: "PlayerMini-icon-pause.png"), for: .normal)
     }
     
     func player_mini_playing() {
-        playerMini?.playMiniPlayButton.setBackgroundImage(UIImage(named: "PlayerMini-icon-playing.png"), for: .normal)
+        playerMini?.playMiniPlayButton.setImage(UIImage(named: "PlayerMini-icon-playing.png"), for: .normal)
     }
     
     func player_main_pause() {
-        playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-pause.png"), for: .normal)
+        playerMini?.playMainPlayButton.setImage(UIImage(named: "PlayerMain-icon-Pause.png"), for: .normal)
     }
     
     func player_main_playing() {
-        playerMini?.playMainPlayButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-playing.png"), for: .normal)
+        playerMini?.playMainPlayButton.setImage(UIImage(named: "PlayerMain-icon-playing.png"), for: .normal)
     }
     
     func player_main_down_off() {
-        playerMini?.player_main_down_button.setBackgroundImage(UIImage(named: "PlayerMain-icon-down-off.png"), for: .normal)
+        playerMini?.playerMiniDownloadButton.setImage(UIImage(named: "PlayerMain-icon-down-off.png"), for: .normal)
     }
     
     func player_main_down_on() {
-        playerMini?.player_main_down_button.setBackgroundImage(UIImage(named: "PlayerMain-icon-down-on.png"), for: .normal)
+        playerMini?.playerMiniDownloadButton.setImage(UIImage(named: "PlayerMain-icon-down-on.png"), for: .normal)
     }
     
     func player_main_exchange_off() {
-        playerMini?.exchangeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Exchange-off.png"), for: .normal)
+        playerMini?.exchangeButton.setImage(UIImage(named: "PlayerMain-icon-Exchange-off.png"), for: .normal)
     }
     
     func player_main_exchange_on() {
-        playerMini?.exchangeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-Exchange-on.png"), for: .normal)
+        playerMini?.exchangeButton.setImage(UIImage(named: "PlayerMain-icon-Exchange-on.png"), for: .normal)
     }
     
     func player_main_like_off(){
-        playerMini?.playerMiniLikeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-off.png"), for: .normal)
+        playerMini?.playerMiniLikeButton.setImage(UIImage(named: "PlayerMain-icon-like-off.png"), for: .normal)
     }
     
     func player_main_like_on() {
-        playerMini?.playerMiniLikeButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-like-on.png"), for: .normal)
+        playerMini?.playerMiniLikeButton.setImage(UIImage(named: "PlayerMain-icon-like-on.png"), for: .normal)
     }
     
     func player_main_repeat_off() {
-        playerMini?.repeatButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-repeat-off.png"), for: .normal)
+        playerMini?.repeatButton.setImage(UIImage(named: "PlayerMain-icon-repeat-off.png"), for: .normal)
     }
     
     func player_main_repeat_on() {
-        playerMini?.repeatButton.setBackgroundImage(UIImage(named: "PlayerMain-icon-repeat-on.png"), for: .normal)
+        playerMini?.repeatButton.setImage(UIImage(named: "PlayerMain-icon-repeat-on.png"), for: .normal)
     }
     
+    //MARK: - API
+    func loadDataOnMenu(params: String) {
+        TopicService.loadAllTopic(params: params) { (data, error) in
+            if let listData = data {
+                //Thanh cong
+                self.currentListData = listData
+                self.cachedListData[params] = listData
+                DispatchQueue.main.async {
+                    self.homeTableView.reloadData()
+                    self.playerMini?.vocTableView.reloadData()
+                    self.playerMini?.playListSongTableView.reloadData()
+                    self.stopAnimating()
+                }
+            } else if error != nil {
+                //Co loi
+                print("Error when loading list post : err")
+            }
+        }
+    }
     
 }
 
@@ -993,5 +739,11 @@ extension String {
     }
     var uppercaseFirst: String {
         return first.uppercased() + String(characters.dropFirst())
+    }
+}
+
+extension ViewController: ProtocolDelegate {
+    func handleAlphaOpacityView(alpha: CGFloat) {
+        opacityView?.alpha = alpha
     }
 }

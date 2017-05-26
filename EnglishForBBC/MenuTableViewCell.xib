@@ -20,21 +20,21 @@
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Menu-icon-Drama" translatesAutoresizingMaskIntoConstraints="NO" id="1P8-Go-fSW">
-                        <rect key="frame" x="20" y="4" width="35" height="35"/>
+                        <rect key="frame" x="20" y="10" width="23" height="23"/>
                         <constraints>
                             <constraint firstAttribute="width" secondItem="1P8-Go-fSW" secondAttribute="height" multiplier="1:1" id="2gG-dI-hHL"/>
                         </constraints>
                     </imageView>
                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="veS-uX-Bkb">
-                        <rect key="frame" x="75" y="14" width="33" height="16"/>
-                        <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                        <rect key="frame" x="63" y="13" width="37.5" height="18"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="15"/>
                         <color key="textColor" red="0.39215686274509803" green="0.39215686274509803" blue="0.39215686274509803" alpha="1" colorSpace="calibratedRGB"/>
                         <nil key="highlightedColor"/>
                     </label>
                 </subviews>
                 <constraints>
                     <constraint firstItem="veS-uX-Bkb" firstAttribute="leading" secondItem="1P8-Go-fSW" secondAttribute="trailing" constant="20" id="2q5-sD-HcM"/>
-                    <constraint firstItem="1P8-Go-fSW" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="4" id="Diu-jJ-e1h"/>
+                    <constraint firstItem="1P8-Go-fSW" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="10" id="Diu-jJ-e1h"/>
                     <constraint firstItem="veS-uX-Bkb" firstAttribute="centerY" secondItem="1P8-Go-fSW" secondAttribute="centerY" id="NSU-2n-QNO"/>
                     <constraint firstItem="1P8-Go-fSW" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="fND-YF-P1t"/>
                     <constraint firstItem="1P8-Go-fSW" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="20" id="oZ9-v2-aN2"/>

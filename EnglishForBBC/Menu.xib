@@ -16,24 +16,17 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="G0Q-yD-jKm">
-                    <rect key="frame" x="0.0" y="0.0" width="300" height="55"/>
+                    <rect key="frame" x="0.0" y="0.0" width="300" height="64"/>
                     <subviews>
-                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="FRn-E7-NRj">
-                            <rect key="frame" x="0.0" y="0.0" width="300" height="15"/>
-                            <color key="backgroundColor" red="1" green="0.043632621670000003" blue="0.17444194430000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                            <constraints>
-                                <constraint firstAttribute="height" constant="15" id="Xtu-Pj-f5W"/>
-                            </constraints>
-                        </view>
                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Q5Q-QS-eGc">
-                            <rect key="frame" x="20" y="44" width="260" height="1"/>
+                            <rect key="frame" x="20" y="53" width="260" height="1"/>
                             <color key="backgroundColor" red="1" green="0.043632621670000003" blue="0.17444194430000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="1" id="dRu-lb-BnY"/>
                             </constraints>
                         </view>
                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="LEARN ENGLISH" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Rxd-dR-VRb">
-                            <rect key="frame" x="65" y="20" width="171" height="19"/>
+                            <rect key="frame" x="65" y="21.5" width="171" height="26.5"/>
                             <fontDescription key="fontDescription" type="boldSystem" pointSize="22"/>
                             <color key="textColor" red="1" green="0.043632621670000003" blue="0.17444194430000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             <nil key="highlightedColor"/>
@@ -41,12 +34,8 @@
                     </subviews>
                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     <constraints>
-                        <constraint firstAttribute="height" constant="55" id="60h-k4-9bu"/>
-                        <constraint firstItem="FRn-E7-NRj" firstAttribute="top" secondItem="G0Q-yD-jKm" secondAttribute="top" id="Dtz-dU-o2E"/>
-                        <constraint firstItem="Rxd-dR-VRb" firstAttribute="top" secondItem="FRn-E7-NRj" secondAttribute="bottom" constant="5" id="K0X-2B-ylm"/>
-                        <constraint firstAttribute="trailing" secondItem="FRn-E7-NRj" secondAttribute="trailing" id="Qmh-lT-U8X"/>
+                        <constraint firstAttribute="height" constant="64" id="60h-k4-9bu"/>
                         <constraint firstItem="Q5Q-QS-eGc" firstAttribute="leading" secondItem="G0Q-yD-jKm" secondAttribute="leading" constant="20" id="UnO-3E-lKv"/>
-                        <constraint firstItem="FRn-E7-NRj" firstAttribute="leading" secondItem="G0Q-yD-jKm" secondAttribute="leading" id="aEA-YY-GY0"/>
                         <constraint firstAttribute="bottom" secondItem="Q5Q-QS-eGc" secondAttribute="bottom" constant="10" id="fG1-gb-kPs"/>
                         <constraint firstAttribute="trailing" secondItem="Q5Q-QS-eGc" secondAttribute="trailing" constant="20" id="p6U-8L-ZnR"/>
                         <constraint firstItem="Q5Q-QS-eGc" firstAttribute="top" secondItem="Rxd-dR-VRb" secondAttribute="bottom" constant="5" id="t7L-FH-gRu"/>
@@ -54,7 +43,7 @@
                     </constraints>
                 </view>
                 <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" style="plain" separatorStyle="none" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="EEp-1M-ktw">
-                    <rect key="frame" x="0.0" y="55" width="300" height="612"/>
+                    <rect key="frame" x="0.0" y="64" width="300" height="603"/>
                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                 </tableView>
                 <view alpha="0.5" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="l3m-dn-Ram">

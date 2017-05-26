@@ -13,8 +13,10 @@ class ModelTopic {
     var year: Int?
     var name: String?
     var desc: String?
-    var img: String?
+    var image_link: String?
     var voc: String?
+    var html_link: String?
+    var audio_link: String?
     
     init() {
         
@@ -25,6 +27,8 @@ class ModelTopic {
         self.year = dictModelTopic["year"] as? Int
         self.name = dictModelTopic["name"] as? String
         self.desc = dictModelTopic["desc"] as? String
-        self.img = dictModelTopic["img"] as? String
+        self.image_link = dictModelTopic["image_link"] as? String
+        self.html_link = dictModelTopic["html_link"] as? String
+        self.audio_link = dictModelTopic["audio_link"] as? String
     }
 }

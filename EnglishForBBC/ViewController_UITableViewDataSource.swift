@@ -23,7 +23,11 @@ extension ViewController: UITableViewDataSource {
         } else if tableView == playerMini?.vocTableView {
             return vocAndMean.count
         } else {
-            return arrName.count
+            if let listData = currentListData {
+                return listData.count
+            }
+            
+            return 0
         }
     }
     
@@ -36,7 +40,7 @@ extension ViewController: UITableViewDataSource {
             headerLabel.text = arrayTitleOfSection[section]
             headerLabel.frame = CGRect(x: 0.0, y: 0.0, width: (menu?.menuTableView.frame.width)!, height: heightSectionHeaderMenu)
             headerLabel.textAlignment = .center
-            headerLabel.font = UIFont(name: headerLabel.font.fontName, size: 12.0)
+            headerLabel.font = UIFont(name: headerLabel.font.fontName, size: 15.0)
             headerLabel.font = UIFont.boldSystemFont(ofSize: headerLabel.font.pointSize)
             
             headerView.addSubview(headerLabel)
@@ -62,7 +66,7 @@ extension ViewController: UITableViewDataSource {
             }
             
             DispatchQueue.global().async {
-                let itemArrName = self.arrName[indexPath.row]
+                let itemArrName = self.currentListData?[indexPath.row].name
                 DispatchQueue.main.async {
                     cell.iconMusicImageView.image = UIImage(named: "PlayerMain-icon-Music.png")
                     cell.nameSongLabel.text = itemArrName
@@ -75,17 +79,22 @@ extension ViewController: UITableViewDataSource {
             cell.homeImage.image = nil
             cell.homeNameSongLabel.text = nil
             cell.homeDescSongLabel.text = nil
-            cell.homeLikeButton.setBackgroundImage(UIImage(named: "Home-button-like-off.png"), for: .normal)
+            cell.homeLikeButton.setImage(UIImage(named: "Home-button-like-off.png"), for: .normal)
             
-            let urlString = self.arrImage_link[indexPath.row]
-            let itemArrName = self.arrName[indexPath.row]
-            let itemArrDesc = self.arrDesc[indexPath.row]
+            let postData = currentListData?[indexPath.row]
+            let urlString = postData?.image_link
+            let itemArrName = postData?.name
+            let itemArrDesc = postData?.desc
             
             cell.homeLikeButton.tag = indexPath.row
             cell.homeLikeButton.addTarget(self, action: #selector(self.handlePressHomeLikeButton), for: .touchUpInside)
             
+            let imageCache = NSCache<AnyObject, AnyObject>()
+            let nameCache = NSCache<AnyObject, AnyObject>()
+            let descCache = NSCache<AnyObject, AnyObject>()
+            
             DispatchQueue.global().async {
-                let url = URL(string: urlString)
+                let url = URL(string: urlString!)
                 if let imgCache = imageCache.object(forKey: urlString as AnyObject), let nameCache = nameCache.object(forKey: itemArrName as AnyObject), let descCache = descCache.object(forKey: itemArrDesc as AnyObject) {
                     DispatchQueue.main.async {
                         cell.homeImage.image = imgCache as? UIImage
@@ -111,15 +120,17 @@ extension ViewController: UITableViewDataSource {
                 }
                 
                 DispatchQueue.main.async {
-                    for (_ , value) in self.dictFavorite! {
-                        let itemValue = value as! [String: Any]
-                        
-                        if cell.homeNameSongLabel.text! == itemValue["name"]! as! String
-//                            , self.id == itemValue["id"]! as? Int, self.year == itemValue["year"]! as? Int, cell.homeDescSongLabel.text! == itemValue["desc"]! as? String, cell.homeImage.image! == UIImage(named: (itemValue["img"]! as? String)!)
-                        {
-                            cell.homeLikeButton.setBackgroundImage(UIImage(named: "Home-button-like-on.png"), for: .normal)
+                    if let dict = self.dictFavorite {
+                        for (_ , value) in dict {
+                            let itemValue = value as! [String: Any]
+                            if cell.homeNameSongLabel.text == itemValue["name"] as? String
+                                //                            , self.id == itemValue["id"]! as? Int, self.year == itemValue["year"]! as? Int, cell.homeDescSongLabel.text! == itemValue["desc"]! as? String, cell.homeImage.image! == UIImage(named: (itemValue["img"]! as? String)!)
+                            {
+                                cell.homeLikeButton.setImage(UIImage(named: "Home-button-like-on.png"), for: .normal)
+                            }
                         }
                     }
+                    
                 }
                 
             }
